@@ -30,13 +30,24 @@ CREATE TABLE Customers (
     CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Tabela de Check-ins (Histórico)
+-- Tabela de Visitas (Unificação de Check-in e Check-out)
 CREATE TABLE Checkins (
     Id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    SellerId UUID REFERENCES Sellers(Id),
-    CustomerId UUID REFERENCES Customers(Id),
+    SellerId UUID REFERENCES Sellers(Id) NOT NULL,
+    CustomerId UUID REFERENCES Customers(Id) NOT NULL,
+    
+    -- Dados da Entrada (Check-in)
     LatitudeCaptured DECIMAL(10, 8) NOT NULL,
     LongitudeCaptured DECIMAL(11, 8) NOT NULL,
     DistanceMeters FLOAT NOT NULL,
-    Timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    CheckinTimestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    
+    -- Dados da Saída (Check-out) - Iniciam nulos
+    CheckoutLatitude DECIMAL(10, 8),
+    CheckoutLongitude DECIMAL(11, 8),
+    CheckoutDistanceMeters FLOAT,
+    CheckoutTimestamp TIMESTAMP,
+    
+    -- Resultado (Calculado via Procedure ou Aplicação)
+    DurationMinutes INT
 );
