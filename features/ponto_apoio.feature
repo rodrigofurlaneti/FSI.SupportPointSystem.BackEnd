@@ -45,7 +45,34 @@ Funcionalidade: Gestão de Localização e Check-in de Vendas
     Então a API deve retornar o erro "403 Forbidden"
     E a mensagem "Fora do raio permitido para este cliente"
 
-  # --- 4. SEGURANÇA ---
+  # --- 4. OPERAÇÃO DE CHECK-IN ---
+  Cenário: Vendedor realiza check-out com sucesso
+    Dado que o Vendedor "Carlos" realizou um Check-in na "Padaria Silva" às 10:00
+    Quando o Vendedor solicitar o Check-out às 10:45
+    E estiver dentro do raio de 100 metros do cliente
+    Então o sistema deve registrar o horário de saída
+    E calcular a duração da visita como "45 minutos".
+
+  Cenário: Vendedor tenta check-out fora do local
+    Dado que o Vendedor está a 500 metros de distância do cliente
+    Quando tentar realizar o check-out
+    Então a API deve retornar o erro "403 Forbidden"
+    E a mensagem "Fora do raio permitido para este cliente"
+
+  # ---5. OPERAÇÃO Um vendedor não pode estar em dois lugares ao mesmo tempo ou esquecer de fechar uma visita antes de abrir outra.
+  Cenário: Bloqueio de múltiplos Check-ins simultâneos
+    Dado que o Vendedor já possui um Check-in aberto no "Cliente A"
+    Quando ele tentar realizar um novo Check-in no "Cliente B" sem ter feito o Check-out do anterior
+    Então o sistema deve retornar um erro "409 Conflict"
+    E informar que ele precisa encerrar a visita atual antes de iniciar uma nova.
+  
+  Cenário: Tentativa de Check-out sem Check-in prévio
+    Dado que o Vendedor não iniciou nenhuma visita
+    Quando ele enviar uma requisição de Check-out
+    Então o sistema deve retornar um erro "400 Bad Request"
+    E a mensagem "Não existe uma visita ativa para este vendedor".
+
+  # --- 6. SEGURANÇA ---
   Cenário: Vendedor tenta acessar funções de Admin
     Dado que um utilizador com perfil "VENDEDOR" tenta acessar a rota "POST /clientes"
     Então a API deve retornar o erro "403 Forbidden"
