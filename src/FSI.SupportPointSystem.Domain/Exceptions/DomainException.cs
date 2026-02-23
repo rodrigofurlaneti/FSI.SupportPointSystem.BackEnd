@@ -1,5 +1,5 @@
 using System;
-namespace FSI.SupportPoint.Domain.Exceptions
+namespace FSI.SupportPointSystem.Domain.Exceptions
 {
     public class DomainException : Exception
     {

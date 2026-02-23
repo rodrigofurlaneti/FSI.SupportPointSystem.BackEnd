@@ -1,7 +1,7 @@
 using System;
 using System.Threading.Tasks;
-using FSI.SupportPoint.Domain.Entities;
-namespace FSI.SupportPoint.Domain.Interfaces.Repository
+using FSI.SupportPointSystem.Domain.Entities;
+namespace FSI.SupportPointSystem.Domain.Interfaces.Repository
 {
     public interface IVisitRepository
     {

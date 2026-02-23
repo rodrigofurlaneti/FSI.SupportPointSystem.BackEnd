@@ -1,8 +1,8 @@
 using System;
-using FSI.SupportPoint.Domain.Exceptions;
-using FSI.SupportPoint.Domain.Entities;
-using FSI.SupportPoint.Domain.ValueObjects;
-namespace FSI.SupportPoint.Domain.Entities
+using FSI.SupportPointSystem.Domain.Exceptions;
+using FSI.SupportPointSystem.Domain.Entities;
+using FSI.SupportPointSystem.Domain.ValueObjects;
+namespace FSI.SupportPointSystem.Domain.Entities
 {
     public class Visit
     {

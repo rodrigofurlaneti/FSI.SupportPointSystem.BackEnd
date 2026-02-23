@@ -1,28 +1,22 @@
-using System;
-using FSI.SupportPoint.Domain.Exceptions;
-using FSI.SupportPoint.Domain.Entities;
-using FSI.SupportPoint.Domain.ValueObjects;
-namespace FSI.SupportPoint.Domain.Entities
-
+namespace FSI.SupportPointSystem.Domain.Entities
 {
     public class Seller
-	{
-		public Guid Id { get; private set; }
-		public Guid UserId { get; private set; }
-		public string Name { get; private set; }
-		public string Phone { get; private set; }
-		public bool Active { get; private set; }
+    {
+        public Guid Id { get; private set; }
+        public string Name { get; private set; }
+        public Cpf Cpf { get; private set; }
+        public Password Password { get; private set; }
+        public string Email { get; private set; }
 
-		public Seller(Guid userId, string name, string phone)
-		{
-			Id = Guid.NewGuid();
-			UserId = userId;
-			Name = name;
-			Phone = phone;
-			Active = true;
-		}
-
-		public void Deactivate() => Active = false;
-	}
+        // Construtor de Negócio
+        public Seller(string name, Cpf cpf, string email, Password password)
+        {
+            Id = Guid.NewGuid();
+            Name = name;
+            Cpf = cpf;
+            Email = email;
+            Password = password;
+        }
+    }
 }
 

@@ -1,4 +1,4 @@
-namespace FSI.SupportPoint.Domain.Exceptions
+namespace FSI.SupportPointSystem.Domain.Exceptions
 {
     public class BusinessRuleException : DomainException
     {

@@ -1,5 +1,5 @@
-using SupportPoint.Domain.ValueObjects;
-namespace FSI.SupportPoint.Domain.Services
+using SupportPointSystem.Domain.ValueObjects;
+namespace FSI.SupportPointSystem.Domain.Services
 {
     public class LocationService
     {
