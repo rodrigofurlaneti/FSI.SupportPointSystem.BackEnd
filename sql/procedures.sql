@@ -1,92 +1,110 @@
-CREATE OR REPLACE PROCEDURE SpCreateSeller(
-    p_Cpf VARCHAR,
-    p_PasswordHash VARCHAR,
-    p_Name VARCHAR,
-    p_Phone VARCHAR
-)
-LANGUAGE plpgsql AS $$
-DECLARE
-    v_UserId UUID;
+CREATE PROCEDURE SpCreateSeller
+    @Cpf VARCHAR(11),
+    @PasswordHash VARCHAR(255),
+    @Name VARCHAR(100),
+    @Phone VARCHAR(20)
+AS
 BEGIN
-    -- Cria as credenciais de acesso
-    INSERT INTO Users (Cpf, PasswordHash, Role)
-    VALUES (p_Cpf, p_PasswordHash, 'SELLER')
-    RETURNING Id INTO v_UserId;
+    SET NOCOUNT ON;
+    DECLARE @v_UserId UNIQUEIDENTIFIER = NEWID();
 
-    -- Cria o perfil do vendedor vinculado
-    INSERT INTO Sellers (UserId, Name, Phone)
-    VALUES (v_UserId, p_Name, p_Phone);
+    BEGIN TRANSACTION;
+    BEGIN TRY
+        -- Cria as credenciais na tabela Users
+        INSERT INTO Users (Id, Cpf, PasswordHash, [Role])
+        VALUES (@v_UserId, @Cpf, @PasswordHash, 'SELLER');
+
+        -- Cria o perfil do vendedor vinculado
+        INSERT INTO Sellers (UserId, Name, Phone, Active)
+        VALUES (@v_UserId, @Name, @Phone, 1);
+
+        COMMIT TRANSACTION;
+    END TRY
+    BEGIN CATCH
+        ROLLBACK TRANSACTION;
+        THROW;
+    END CATCH
 END;
-$$;
+GO
 
-CREATE OR REPLACE PROCEDURE SpUpsertCustomer(
-    p_CompanyName VARCHAR,
-    p_Cnpj VARCHAR,
-    p_LatTarget DECIMAL,
-    p_LogTarget DECIMAL
-)
-LANGUAGE plpgsql AS $$
+CREATE PROCEDURE SpUpsertCustomer
+    @CompanyName VARCHAR(150),
+    @Cnpj VARCHAR(14),
+    @LatTarget DECIMAL(12, 9),
+    @LogTarget DECIMAL(12, 9)
+AS
 BEGIN
-    INSERT INTO Customers (CompanyName, Cnpj, LatitudeTarget, LongitudeTarget)
-    VALUES (p_CompanyName, p_Cnpj, p_LatTarget, p_LogTarget)
-    ON CONFLICT (Cnpj) DO UPDATE SET
-        CompanyName = EXCLUDED.CompanyName,
-        LatitudeTarget = EXCLUDED.LatitudeTarget,
-        LongitudeTarget = EXCLUDED.LongitudeTarget;
+    SET NOCOUNT ON;
+    
+    IF EXISTS (SELECT 1 FROM Customers WHERE Cnpj = @Cnpj)
+    BEGIN
+        UPDATE Customers SET 
+            CompanyName = @CompanyName,
+            LatitudeTarget = @LatTarget,
+            LongitudeTarget = @LogTarget
+        WHERE Cnpj = @Cnpj;
+    END
+    ELSE
+    BEGIN
+        INSERT INTO Customers (CompanyName, Cnpj, LatitudeTarget, LongitudeTarget)
+        VALUES (@CompanyName, @Cnpj, @LatTarget, @LogTarget);
+    END
 END;
-$$;
+GO
 
-CREATE OR REPLACE PROCEDURE SpRecordCheckin(
-    p_SellerId UUID,
-    p_CustomerId UUID,
-    p_LatCaptured DECIMAL,
-    p_LogCaptured DECIMAL,
-    p_Distance FLOAT
-)
-LANGUAGE plpgsql AS $$
+CREATE PROCEDURE SpRecordCheckin
+    @SellerId UNIQUEIDENTIFIER,
+    @CustomerId UNIQUEIDENTIFIER,
+    @LatCaptured DECIMAL(12, 9),
+    @LogCaptured DECIMAL(12, 9),
+    @Distance FLOAT
+AS
 BEGIN
-    -- Valida se já existe uma visita aberta para este vendedor
-    IF EXISTS (SELECT 1 FROM Checkins WHERE SellerId = p_SellerId AND CheckoutTimestamp IS NULL) THEN
-        RAISE EXCEPTION 'Vendedor já possui um check-in ativo em andamento.';
-    END IF;
+    SET NOCOUNT ON;
 
-    INSERT INTO Checkins (SellerId, CustomerId, LatitudeCaptured, LongitudeCaptured, DistanceMeters)
-    VALUES (p_SellerId, p_CustomerId, p_LatCaptured, p_LogCaptured, p_Distance);
+    IF EXISTS (SELECT 1 FROM Checkins WHERE SellerId = @SellerId AND CheckoutTimestamp IS NULL)
+    BEGIN
+        RAISERROR ('Vendedor já possui um check-in ativo em andamento.', 16, 1);
+        RETURN;
+    END
+
+    INSERT INTO Checkins (SellerId, CustomerId, LatitudeCaptured, LongitudeCaptured, DistanceMeters, CheckinTimestamp)
+    VALUES (@SellerId, @CustomerId, @LatCaptured, @LogCaptured, @Distance, GETDATE());
 END;
-$$;
-
-CREATE OR REPLACE PROCEDURE SpRecordCheckout(
-    p_SellerId UUID,
-    p_CustomerId UUID,
-    p_LatCaptured DECIMAL,
-    p_LogCaptured DECIMAL,
-    p_Distance FLOAT
-)
-LANGUAGE plpgsql AS $$
-DECLARE
-    v_CheckinId UUID;
-    v_CheckinTime TIMESTAMP;
+GO
+CREATE PROCEDURE SpRecordCheckout
+    @SellerId UNIQUEIDENTIFIER,
+    @CustomerId UNIQUEIDENTIFIER,
+    @LatCaptured DECIMAL(12, 9),
+    @LogCaptured DECIMAL(12, 9),
+    @Distance FLOAT
+AS
 BEGIN
-    -- Localiza a última visita aberta para este par Vendedor/Cliente
-    SELECT Id, CheckinTimestamp INTO v_CheckinId, v_CheckinTime
+    SET NOCOUNT ON;
+    DECLARE @v_CheckinId UNIQUEIDENTIFIER;
+    DECLARE @v_CheckinTime DATETIME2;
+
+    -- Localiza a última visita aberta
+    SELECT TOP 1 @v_CheckinId = Id, @v_CheckinTime = CheckinTimestamp
     FROM Checkins 
-    WHERE SellerId = p_SellerId 
-      AND CustomerId = p_CustomerId 
+    WHERE SellerId = @SellerId 
+      AND CustomerId = @CustomerId 
       AND CheckoutTimestamp IS NULL
-    ORDER BY CheckinTimestamp DESC
-    LIMIT 1;
+    ORDER BY CheckinTimestamp DESC;
 
-    IF v_CheckinId IS NULL THEN
-        RAISE EXCEPTION 'Nenhuma visita aberta encontrada para este vendedor neste cliente.';
-    END IF;
+    IF @v_CheckinId IS NULL
+    BEGIN
+        RAISERROR ('Nenhuma visita aberta encontrada para este vendedor neste cliente.', 16, 1);
+        RETURN;
+    END
 
-    -- Atualiza os dados de saída e calcula o tempo de permanência
+    -- Atualiza e calcula duração em minutos
     UPDATE Checkins SET 
-        CheckoutLatitude = p_LatCaptured,
-        CheckoutLongitude = p_LogCaptured,
-        CheckoutDistanceMeters = p_Distance,
-        CheckoutTimestamp = CURRENT_TIMESTAMP,
-        DurationMinutes = EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP - v_CheckinTime)) / 60
-    WHERE Id = v_CheckinId;
+        CheckoutLatitude = @LatCaptured,
+        CheckoutLongitude = @LogCaptured,
+        CheckoutDistanceMeters = @Distance,
+        CheckoutTimestamp = GETDATE(),
+        DurationMinutes = DATEDIFF(MINUTE, @v_CheckinTime, GETDATE())
+    WHERE Id = @v_CheckinId;
 END;
-$$;
+GO

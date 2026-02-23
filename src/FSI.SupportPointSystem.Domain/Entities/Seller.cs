@@ -1,3 +1,6 @@
+using System;
+using FSI.SupportPointSystem.Domain.ValueObjects;
+
 namespace FSI.SupportPointSystem.Domain.Entities
 {
     public class Seller
@@ -5,18 +8,25 @@ namespace FSI.SupportPointSystem.Domain.Entities
         public Guid Id { get; private set; }
         public string Name { get; private set; }
         public Cpf Cpf { get; private set; }
-        public Password Password { get; private set; }
         public string Email { get; private set; }
-
-        // Construtor de Negócio
-        public Seller(string name, Cpf cpf, string email, Password password)
+        public string Phone { get; private set; }
+        public Seller(Guid id, string name, Cpf cpf, string email, string phone)
         {
-            Id = Guid.NewGuid();
+            Id = id;
             Name = name;
             Cpf = cpf;
             Email = email;
-            Password = password;
+            Phone = phone;
+        }
+        public void UpdateDetails(string name, string email, string phone)
+        {
+            if (string.IsNullOrWhiteSpace(name))
+                throw new ArgumentException("O nome não pode ser vazio.");
+            if (string.IsNullOrWhiteSpace(email))
+                throw new ArgumentException("O e-mail não pode ser vazio.");
+            Name = name;
+            Email = email;
+            Phone = phone;
         }
     }
 }
-

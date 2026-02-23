@@ -1,6 +1,6 @@
-using FSI.SupportPoint.Domain.Entities;
-using FSI.SupportPoint.Domain.ValueObjects;
-using System.Dynamic;
+using FSI.SupportPointSystem.Domain.Entities;
+using FSI.SupportPointSystem.Domain.ValueObjects;
+using System;
 
 namespace FSI.SupportPointSystem.Infrastructure.Mappings
 {
@@ -8,22 +8,23 @@ namespace FSI.SupportPointSystem.Infrastructure.Mappings
     {
         public static Visit ToDomain(dynamic row)
         {
-            var checkinLoc = new Coordinates((decimal)row.latitude_captured, (decimal)row.longitude_captured);
+            if (row == null) return null;
+            var checkinLoc = new Coordinates((decimal)row.LatitudeCaptured, (decimal)row.LongitudeCaptured);
             var visit = new Visit(
-                (Guid)row.id,
-                (Guid)row.seller_id,
-                (Guid)row.customer_id,
+                (Guid)row.Id,
+                (Guid)row.SellerId,
+                (Guid)row.CustomerId,
                 checkinLoc,
-                (double)row.distance_meters,
-                (DateTime)row.checkin_timestamp
+                Convert.ToDouble(row.DistanceMeters), 
+                (DateTime)row.CheckinTimestamp
             );
-            if (row.checkout_timestamp != null)
+            if (row.CheckoutTimestamp != null)
             {
-                var checkoutLoc = new Coordinates((decimal)row.checkout_latitude, (decimal)row.checkout_longitude);
-                visit.PerformCheckout(checkoutLoc, (double)row.checkout_distance_meters);
+                var checkoutLoc = new Coordinates((decimal)row.CheckoutLatitude, (decimal)row.CheckoutLongitude);
+                visit.PerformCheckout(checkoutLoc, Convert.ToDouble(row.CheckoutDistanceMeters));
             }
+
             return visit;
         }
     }
 }
-

@@ -1,17 +1,16 @@
 using System;
 using FSI.SupportPointSystem.Domain.Exceptions;
-using FSI.SupportPointSystem.Domain.Entities;
-using FSI.SupportPointSystem.Domain.ValueObjects;
-namespace FSI.SupportPointSystem.Domain.Entities
 
+namespace FSI.SupportPointSystem.Domain.Entities
 {
     public class User
     {
         public Guid Id { get; private set; }
         public string Cpf { get; private set; }
         public string PasswordHash { get; private set; }
-        public string Role { get; private set; } // "ADMIN" ou "SELLER"
-
+        public string Role { get; private set; }
+        public string Name { get; private set; }
+        public Seller? Seller { get; private set; }
         public User(string cpf, string passwordHash, string role)
         {
             if (string.IsNullOrWhiteSpace(cpf) || cpf.Length != 11)
@@ -21,6 +20,16 @@ namespace FSI.SupportPointSystem.Domain.Entities
             Cpf = cpf;
             PasswordHash = passwordHash;
             Role = role;
+            Name = string.Empty; // Inicia vazio
+        }
+        public User(Guid id, string cpf, string passwordHash, string role, string name, Seller? seller = null)
+        {
+            Id = id;
+            Cpf = cpf;
+            PasswordHash = passwordHash;
+            Role = role;
+            Name = name;
+            Seller = seller;
         }
     }
 }

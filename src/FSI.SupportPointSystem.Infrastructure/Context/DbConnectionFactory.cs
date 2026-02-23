@@ -1,6 +1,6 @@
 using System.Data;
+using Microsoft.Data.SqlClient; 
 using Microsoft.Extensions.Configuration;
-using Npgsql;
 
 namespace FSI.SupportPointSystem.Infrastructure.Context
 {
@@ -11,10 +11,8 @@ namespace FSI.SupportPointSystem.Infrastructure.Context
         public DbConnectionFactory(IConfiguration configuration)
         {
             _connectionString = configuration.GetConnectionString("DefaultConnection")
-                ?? throw new ArgumentNullException("ConnectionString não encontrada.");
+                ?? throw new ArgumentNullException("ConnectionString 'DefaultConnection' não encontrada no appsettings.json.");
         }
-
-        public IDbConnection CreateConnection() => new NpgsqlConnection(_connectionString);
+        public IDbConnection CreateConnection() => new SqlConnection(_connectionString);
     }
 }
-

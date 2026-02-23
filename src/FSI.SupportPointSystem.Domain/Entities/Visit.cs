@@ -1,6 +1,5 @@
 using System;
 using FSI.SupportPointSystem.Domain.Exceptions;
-using FSI.SupportPointSystem.Domain.Entities;
 using FSI.SupportPointSystem.Domain.ValueObjects;
 namespace FSI.SupportPointSystem.Domain.Entities
 {
@@ -19,7 +18,7 @@ namespace FSI.SupportPointSystem.Domain.Entities
         public Visit(Guid sellerId, Guid customerId, Coordinates location, double distance)
         {
             if (distance > 100)
-                throw new InvalidOperationException("Vendedor fora do raio de 100m permitido.");
+                throw new DomainException("Vendedor fora do raio de 100m permitido.");
 
             Id = Guid.NewGuid();
             SellerId = sellerId;
@@ -28,15 +27,31 @@ namespace FSI.SupportPointSystem.Domain.Entities
             CheckinDistance = distance;
             CheckinTimestamp = DateTime.UtcNow;
         }
+        public Visit(Guid id, Guid sellerId, Guid customerId, Coordinates checkinLocation, double checkinDistance, DateTime checkinTimestamp)
+        {
+            Id = id;
+            SellerId = sellerId;
+            CustomerId = customerId;
+            CheckinLocation = checkinLocation;
+            CheckinDistance = checkinDistance;
+            CheckinTimestamp = checkinTimestamp;
+        }
         public void PerformCheckout(Coordinates location, double distance)
         {
             if (distance > 100)
-                throw new InvalidOperationException("Vendedor fora do raio de 100m para checkout.");
+                throw new DomainException("Vendedor fora do raio de 100m para checkout.");
 
             CheckoutLocation = location;
             CheckoutDistance = distance;
             CheckoutTimestamp = DateTime.UtcNow;
             DurationMinutes = (int)(CheckoutTimestamp.Value - CheckinTimestamp).TotalMinutes;
+        }
+        public void LoadCheckoutData(Coordinates location, double distance, DateTime timestamp)
+        {
+            CheckoutLocation = location;
+            CheckoutDistance = distance;
+            CheckoutTimestamp = timestamp;
+            DurationMinutes = (int)(timestamp - CheckinTimestamp).TotalMinutes;
         }
     }
 }

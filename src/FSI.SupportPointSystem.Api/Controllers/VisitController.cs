@@ -1,4 +1,6 @@
-using FSI.SupportPointSystem.Application.Dtos;
+using FSI.SupportPoint.Application.Dtos.Checkin.Request;
+using FSI.SupportPoint.Application.Dtos.Checkout.Request;
+using FSI.SupportPoint.Application.Dtos.Visit.Response;
 using FSI.SupportPointSystem.Application.Interfaces;
 using FSI.SupportPointSystem.Domain.Exceptions;
 using Microsoft.AspNetCore.Mvc;
@@ -15,12 +17,8 @@ namespace FSI.SupportPointSystem.Api.Controllers
         {
             _visitAppService = visitAppService;
         }
-
-        /// <summary>
-        /// Realiza o Check-in do vendedor no cliente.
-        /// </summary>
         [HttpPost("checkin")]
-        [ProducesResponseType(typeof(VisitResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(FSI.SupportPoint.Application.Dtos.Visit.Response.VisitResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> RegisterCheckin([FromBody] CheckinRequest request)
         {
@@ -31,7 +29,6 @@ namespace FSI.SupportPointSystem.Api.Controllers
             }
             catch (DomainException ex)
             {
-                // Erros de regra de negócio (Ex: fora do raio de 100m)
                 return BadRequest(new { message = ex.Message });
             }
             catch (Exception ex)
@@ -39,12 +36,8 @@ namespace FSI.SupportPointSystem.Api.Controllers
                 return StatusCode(500, new { message = "Internal Server Error", detail = ex.Message });
             }
         }
-
-        /// <summary>
-        /// Realiza o Check-out e finaliza a visita.
-        /// </summary>
         [HttpPost("checkout")]
-        [ProducesResponseType(typeof(VisitResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(FSI.SupportPoint.Application.Dtos.Visit.Response.VisitResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> RegisterCheckout([FromBody] CheckoutRequest request)
         {
@@ -55,7 +48,6 @@ namespace FSI.SupportPointSystem.Api.Controllers
             }
             catch (BusinessRuleException ex)
             {
-                // Erros de fluxo (Ex: Vendedor sem check-in ativo)
                 return BadRequest(new { message = ex.Message });
             }
             catch (Exception ex)

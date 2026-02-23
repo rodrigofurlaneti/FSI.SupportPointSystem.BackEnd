@@ -1,19 +1,24 @@
+using FSI.SupportPointSystem.Domain.Interfaces.Repositories; 
+using FSI.SupportPointSystem.Domain.Interfaces.Services;
+using FSI.SupportPointSystem.Domain.Services;
+using FSI.SupportPointSystem.Infrastructure.Context;
+using FSI.SupportPointSystem.Infrastructure.Repositories;
+using FSI.SupportPointSystem.Infrastructure.Services;
 using Microsoft.Extensions.DependencyInjection;
-using FSI.SupportPoint.Domain.Interfaces.Repositories;
-using FSI.SupportPoint.Infrastructure.Repositories;
-using FSI.SupportPoint.Infrastructure.Context;
-
 namespace FSI.SupportPointSystem.Infrastructure
 {
     public static class DependencyInjection
     {
         public static IServiceCollection AddInfrastructure(this IServiceCollection services)
         {
-            services.AddSingleton<DbConnectionFactory>();
-            services.AddScoped<IVisitRepository, VisitRepository>();
+            services.AddScoped<DbConnectionFactory>();
+            services.AddScoped<IAuthService, AuthService>();
+            services.AddScoped<ILocationService, LocationService>();
+            services.AddScoped<ISellerRepository, SellerRepository>();
             services.AddScoped<ICustomerRepository, CustomerRepository>();
+            services.AddScoped<IVisitRepository, VisitRepository>();
+
             return services;
         }
     }
 }
-

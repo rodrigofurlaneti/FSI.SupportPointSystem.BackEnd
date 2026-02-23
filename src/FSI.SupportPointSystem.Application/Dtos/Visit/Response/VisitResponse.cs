@@ -1,4 +1,4 @@
-namespace FSI.SupportPointSystem.Application.Dtos
+namespace FSI.SupportPoint.Application.Dtos.Visit.Response
 {
     public record VisitResponse
     {

@@ -1,5 +1,7 @@
+using FSI.SupportPoint.Application.Dtos.Checkin.Request;
+using FSI.SupportPoint.Application.Dtos.Checkout.Request;
+using FSI.SupportPoint.Application.Dtos.Visit.Response;
 using FSI.SupportPointSystem.Application;
-using FSI.SupportPointSystem.Application.Dtos;
 namespace FSI.SupportPointSystem.Application.Interfaces
 {
     public interface IVisitAppService

@@ -1,53 +1,42 @@
--- Criação do Banco de Dados
-CREATE DATABASE SupportPointDB;
-
--- Tabela de Usuários (Auth e RBAC)
+-- Tabelas adaptadas para SQL Server
 CREATE TABLE Users (
-    Id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    Id UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
     Cpf VARCHAR(11) UNIQUE NOT NULL,
     PasswordHash VARCHAR(255) NOT NULL,
-    Role VARCHAR(20) CHECK (Role IN ('ADMIN', 'SELLER')) NOT NULL,
-    CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    [Role] VARCHAR(20) CHECK ([Role] IN ('ADMIN', 'SELLER')) NOT NULL,
+    CreatedAt DATETIME2 DEFAULT GETDATE()
 );
 
--- Tabela de Vendedores
 CREATE TABLE Sellers (
-    Id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    UserId UUID REFERENCES Users(Id) ON DELETE CASCADE,
+    Id UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
+    UserId UNIQUEIDENTIFIER FOREIGN KEY REFERENCES Users(Id) ON DELETE CASCADE,
     Name VARCHAR(100) NOT NULL,
     Phone VARCHAR(20),
-    Active BOOLEAN DEFAULT TRUE,
-    CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    Email VARCHAR(150), -- Adicionado para bater com o SellerMapper
+    Active BIT DEFAULT 1,
+    CreatedAt DATETIME2 DEFAULT GETDATE()
 );
 
--- Tabela de Clientes
 CREATE TABLE Customers (
-    Id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    Id UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
     CompanyName VARCHAR(150) NOT NULL,
     Cnpj VARCHAR(14) UNIQUE NOT NULL,
-    LatitudeTarget DECIMAL(10, 8) NOT NULL,
-    LongitudeTarget DECIMAL(11, 8) NOT NULL,
-    CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    LatitudeTarget DECIMAL(12, 9) NOT NULL,
+    LongitudeTarget DECIMAL(12, 9) NOT NULL,
+    CreatedAt DATETIME2 DEFAULT GETDATE()
 );
 
--- Tabela de Visitas (Unificação de Check-in e Check-out)
 CREATE TABLE Checkins (
-    Id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    SellerId UUID REFERENCES Sellers(Id) NOT NULL,
-    CustomerId UUID REFERENCES Customers(Id) NOT NULL,
-    
-    -- Dados da Entrada (Check-in)
-    LatitudeCaptured DECIMAL(10, 8) NOT NULL,
-    LongitudeCaptured DECIMAL(11, 8) NOT NULL,
+    Id UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
+    SellerId UNIQUEIDENTIFIER FOREIGN KEY REFERENCES Sellers(Id) NOT NULL,
+    CustomerId UNIQUEIDENTIFIER FOREIGN KEY REFERENCES Customers(Id) NOT NULL,
+    LatitudeCaptured DECIMAL(12, 9) NOT NULL,
+    LongitudeCaptured DECIMAL(12, 9) NOT NULL,
     DistanceMeters FLOAT NOT NULL,
-    CheckinTimestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    
-    -- Dados da Saída (Check-out) - Iniciam nulos
-    CheckoutLatitude DECIMAL(10, 8),
-    CheckoutLongitude DECIMAL(11, 8),
+    CheckinTimestamp DATETIME2 DEFAULT GETDATE(),
+    CheckoutLatitude DECIMAL(12, 9),
+    CheckoutLongitude DECIMAL(12, 9),
     CheckoutDistanceMeters FLOAT,
-    CheckoutTimestamp TIMESTAMP,
-    
-    -- Resultado (Calculado via Procedure ou Aplicação)
+    CheckoutTimestamp DATETIME2,
     DurationMinutes INT
 );

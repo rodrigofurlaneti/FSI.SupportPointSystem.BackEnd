@@ -1,7 +1,7 @@
 using System;
 using System.Threading.Tasks;
-using FSI.SupportPoint.Domain.ValueObjects;
-namespace FSI.SupportPoint.Domain.Interfaces.Services
+using FSI.SupportPointSystem.Domain.ValueObjects;
+namespace FSI.SupportPointSystem.Domain.Interfaces.Services
 {
     public interface ILocationService
     {

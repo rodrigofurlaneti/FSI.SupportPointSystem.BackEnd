@@ -1,27 +1,22 @@
 using System;
 using FSI.SupportPointSystem.Domain.Exceptions;
 using FSI.SupportPointSystem.Domain.ValueObjects;
-
 namespace FSI.SupportPointSystem.Domain.Entities
 {
     public class Customer
     {
         public Guid Id { get; private set; }
         public string CompanyName { get; private set; }
-        public string Cnpj { get; private set; }
+        public Cnpj Cnpj { get; private set; } 
         public Coordinates LocationTarget { get; private set; }
-        public Customer(string companyName, string cnpj, Coordinates locationTarget)
+        public Customer(Guid id, string companyName, Cnpj cnpj, Coordinates locationTarget)
         {
-            if (string.IsNullOrWhiteSpace(companyName))
-                throw new DomainException("O nome da empresa (CompanyName) não pode ser vazio.");
-            if (string.IsNullOrWhiteSpace(cnpj))
-                throw new DomainException("O CNPJ é obrigatório.");
-            if (cnpj.Length != 14)
-                throw new DomainException("O CNPJ deve conter exatamente 14 dígitos.");
-            LocationTarget = locationTarget ?? throw new DomainException("A localização alvo é obrigatória.");
-            Id = Guid.NewGuid();
+            if (id == Guid.Empty) throw new DomainException("ID inválido.");
+            if (string.IsNullOrWhiteSpace(companyName)) throw new DomainException("Nome inválido.");
+            Id = id;
             CompanyName = companyName;
-            Cnpj = cnpj;
+            Cnpj = cnpj ?? throw new DomainException("CNPJ obrigatório.");
+            LocationTarget = locationTarget ?? throw new DomainException("Localização obrigatória.");
         }
         public void UpdateLocation(Coordinates newLocation)
         {

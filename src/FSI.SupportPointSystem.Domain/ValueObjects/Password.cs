@@ -1,3 +1,4 @@
+using FSI.SupportPointSystem.Domain.Exceptions;
 namespace FSI.SupportPointSystem.Domain.ValueObjects
 {
     public record Password
