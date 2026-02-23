@@ -11,6 +11,7 @@ namespace FSI.SupportPointSystem.Domain.Entities
         public string Role { get; private set; }
         public string Name { get; private set; }
         public Seller? Seller { get; private set; }
+        private User() { }
         public User(string cpf, string passwordHash, string role)
         {
             if (string.IsNullOrWhiteSpace(cpf) || cpf.Length != 11)

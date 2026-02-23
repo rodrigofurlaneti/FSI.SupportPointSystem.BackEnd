@@ -28,15 +28,17 @@ namespace FSI.SupportPointSystem.Infrastructure.Repositories
         public async Task SaveCheckinAsync(Visit visit)
         {
             using var connection = _dbConnectionFactory.CreateConnection();
-            var parameters = new DynamicParameters();
-            parameters.Add("@SellerId", visit.SellerId, DbType.Guid);
-            parameters.Add("@CustomerId", visit.CustomerId, DbType.Guid);
-            parameters.Add("@LatCaptured", visit.CheckinLocation.Latitude, DbType.Decimal);
-            parameters.Add("@LogCaptured", visit.CheckinLocation.Longitude, DbType.Decimal);
-            parameters.Add("@Distance", visit.CheckinDistance, DbType.Double);
             await connection.ExecuteAsync(
                 "SpRecordCheckin",
-                parameters,
+                new
+                {
+                    Id = visit.Id,
+                    SellerId = visit.SellerId,
+                    CustomerId = visit.CustomerId,
+                    LatitudeCaptured = visit.CheckinLocation.Latitude,
+                    LongitudeCaptured = visit.CheckinLocation.Longitude,
+                    DistanceMeters = visit.CheckinDistance
+                },
                 commandType: CommandType.StoredProcedure
             );
         }

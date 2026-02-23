@@ -43,7 +43,6 @@ namespace FSI.SupportPointSystem.Infrastructure.Services
 
         public bool VerifyPassword(string password, string passwordHash)
         {
-            // O BCrypt.Net.BCrypt.Verify lida com o salt internamente
             return BCrypt.Net.BCrypt.Verify(password, passwordHash);
         }
 

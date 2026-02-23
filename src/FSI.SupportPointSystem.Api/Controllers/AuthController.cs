@@ -1,30 +1,33 @@
-using FSI.SupportPointSystem.Domain.Interfaces.Repositories;
+using FSI.SupportPoint.Application.Dtos.Login.Request;
+using FSI.SupportPoint.Application.Interfaces;
 using FSI.SupportPointSystem.Domain.Interfaces.Services;
+using FSI.SupportPointSystem.Infrastructure.Services;
 using Microsoft.AspNetCore.Mvc;
-namespace FSI.SupportPointSystem.Api.Controllers
+
+[ApiController]
+[Route("api/[controller]")]
+public class AuthController : ControllerBase
 {
-    [ApiController]
-    [Route("api/[controller]")]
-    public class AuthController : ControllerBase
+    private readonly IUserAppService _userAppService;
+    private readonly IAuthService _authService;
+
+    public AuthController(IUserAppService userAppService, IAuthService authService)
     {
-        private readonly IAuthService _authService;
-        private readonly IUserRepository _userRepository;
-        public AuthController(IAuthService authService, IUserRepository userRepository)
-        {
-            _authService = authService;
-            _userRepository = userRepository;
-        }
-        [HttpPost("login")]
-        public async Task<IActionResult> Login([FromBody] FSI.SupportPoint.Application.Dtos.Login.Request.LoginRequest request)
-        {
-            var user = await _userRepository.GetByCpfAsync(request.Cpf);
+        _userAppService = userAppService;
+        _authService = authService;
+    }
 
-            if (user == null || !_authService.VerifyPassword(request.Password, user.PasswordHash))
-                return Unauthorized("CPF ou senha inválidos.");
-
-            var token = _authService.GenerateToken(user.Cpf, user.Role, user.Id);
-
-            return Ok(new { Token = token, User = user.Name });
-        }
+    [HttpPost("login")]
+    public async Task<IActionResult> Login([FromBody] LoginRequest request)
+    {
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+        var user = await _userAppService.GetByCpfAsync(request.Cpf);
+        var hashGerado = _authService.HashPassword(request.Password);//test
+        var auth = _authService.VerifyPassword(request.Password, user.PasswordHash);
+        if (user == null || !auth)
+            return Unauthorized("CPF ou senha inválidos.");
+        var token = _authService.GenerateToken(user.Cpf, user.Role, user.Id);
+        return Ok(new { token });
     }
 }
