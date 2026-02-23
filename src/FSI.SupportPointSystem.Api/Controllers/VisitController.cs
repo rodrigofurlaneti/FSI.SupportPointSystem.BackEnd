@@ -3,10 +3,12 @@ using FSI.SupportPoint.Application.Dtos.Checkout.Request;
 using FSI.SupportPoint.Application.Dtos.Visit.Response;
 using FSI.SupportPointSystem.Application.Interfaces;
 using FSI.SupportPointSystem.Domain.Exceptions;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FSI.SupportPointSystem.Api.Controllers
 {
+    [Authorize(Roles = "SELLER")]
     [ApiController]
     [Route("api/[controller]")]
     public class VisitController : ControllerBase
