@@ -1,6 +1,6 @@
-using FSI.SupportPoint.Application.Dtos.Checkin.Request;
-using FSI.SupportPoint.Application.Dtos.Checkout.Request;
-using FSI.SupportPoint.Application.Dtos.Visit.Response;
+using FSI.SupportPointSystem.Application.Dtos.Checkin.Request;
+using FSI.SupportPointSystem.Application.Dtos.Checkout.Request;
+using FSI.SupportPointSystem.Application.Dtos.Visit.Response;
 using FSI.SupportPointSystem.Application.Interfaces;
 using FSI.SupportPointSystem.Domain.Exceptions;
 using Microsoft.AspNetCore.Authorization;
@@ -20,7 +20,7 @@ namespace FSI.SupportPointSystem.Api.Controllers
             _visitAppService = visitAppService;
         }
         [HttpPost("checkin")]
-        [ProducesResponseType(typeof(FSI.SupportPoint.Application.Dtos.Visit.Response.VisitResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(VisitResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> RegisterCheckin([FromBody] CheckinRequest request)
         {
@@ -39,7 +39,7 @@ namespace FSI.SupportPointSystem.Api.Controllers
             }
         }
         [HttpPost("checkout")]
-        [ProducesResponseType(typeof(FSI.SupportPoint.Application.Dtos.Visit.Response.VisitResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(VisitResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> RegisterCheckout([FromBody] CheckoutRequest request)
         {

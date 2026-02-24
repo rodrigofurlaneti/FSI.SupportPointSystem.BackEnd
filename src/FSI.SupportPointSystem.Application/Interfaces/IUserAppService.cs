@@ -1,5 +1,5 @@
 ﻿using FSI.SupportPointSystem.Domain.Entities;
-namespace FSI.SupportPoint.Application.Interfaces
+namespace FSI.SupportPointSystem.Application.Interfaces
 {
     public interface IUserAppService
     {

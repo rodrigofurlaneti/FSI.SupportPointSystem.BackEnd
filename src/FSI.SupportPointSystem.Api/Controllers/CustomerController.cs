@@ -1,4 +1,4 @@
-using FSI.SupportPoint.Application.Dtos.Customer.Request;
+using FSI.SupportPointSystem.Application.Dtos.Customer.Request;
 using FSI.SupportPointSystem.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

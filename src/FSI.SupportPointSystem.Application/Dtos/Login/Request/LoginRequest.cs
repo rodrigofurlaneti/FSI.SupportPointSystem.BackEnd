@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace FSI.SupportPoint.Application.Dtos.Login.Request
+namespace FSI.SupportPointSystem.Application.Dtos.Login.Request
 {
     public record LoginRequest(
         [Required(ErrorMessage = "O CPF é obrigatório")]

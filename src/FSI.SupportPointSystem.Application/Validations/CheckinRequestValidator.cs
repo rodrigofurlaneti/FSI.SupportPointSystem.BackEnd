@@ -1,5 +1,5 @@
 using FluentValidation;
-using FSI.SupportPoint.Application.Dtos.Checkin.Request;
+using FSI.SupportPointSystem.Application.Dtos.Checkin.Request;
 
 namespace FSI.SupportPointSystem.Application.Validations
 {

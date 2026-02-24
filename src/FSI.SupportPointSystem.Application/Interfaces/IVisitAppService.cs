@@ -1,6 +1,6 @@
-using FSI.SupportPoint.Application.Dtos.Checkin.Request;
-using FSI.SupportPoint.Application.Dtos.Checkout.Request;
-using FSI.SupportPoint.Application.Dtos.Visit.Response;
+using FSI.SupportPointSystem.Application.Dtos.Checkin.Request;
+using FSI.SupportPointSystem.Application.Dtos.Checkout.Request;
+using FSI.SupportPointSystem.Application.Dtos.Visit.Response;
 using FSI.SupportPointSystem.Application;
 namespace FSI.SupportPointSystem.Application.Interfaces
 {

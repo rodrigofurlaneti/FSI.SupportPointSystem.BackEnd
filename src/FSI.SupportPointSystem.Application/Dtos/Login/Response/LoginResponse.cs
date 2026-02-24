@@ -1,4 +1,4 @@
-namespace FSI.SupportPoint.Application.Dtos.Login.Response
+namespace FSI.SupportPointSystem.Application.Dtos.Login.Response
 {
     public record LoginResponse(
         string Token,

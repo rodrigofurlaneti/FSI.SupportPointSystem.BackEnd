@@ -1,5 +1,5 @@
-using FSI.SupportPoint.Application.Dtos.Seller.Request;
-using FSI.SupportPoint.Application.Dtos.Seller.Response;
+using FSI.SupportPointSystem.Application.Dtos.Seller.Request;
+using FSI.SupportPointSystem.Application.Dtos.Seller.Response;
 using FSI.SupportPointSystem.Application.Interfaces;
 using FSI.SupportPointSystem.Domain.Entities;
 using FSI.SupportPointSystem.Domain.Interfaces.Repositories;
@@ -55,7 +55,13 @@ namespace FSI.SupportPointSystem.Application.Services
             var seller = await _sellerRepository.GetByIdAsync(id);
             if (seller == null)
                 throw new Exception("Vendedor não encontrado.");
-            seller.UpdateDetails(request.Name, request.Email, request.Phone);
+            seller.UpdateDetails(
+                request.Name,
+                request.Email,
+                request.Phone,
+                request.IsActive 
+            );
+
             await _sellerRepository.UpdateAsync(seller);
         }
         public async Task DeleteSellerAsync(Guid id)

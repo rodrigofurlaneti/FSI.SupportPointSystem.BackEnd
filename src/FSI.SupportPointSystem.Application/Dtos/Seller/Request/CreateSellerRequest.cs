@@ -1,4 +1,4 @@
-namespace FSI.SupportPoint.Application.Dtos.Seller.Request
+namespace FSI.SupportPointSystem.Application.Dtos.Seller.Request
 {
     public record CreateSellerRequest(
         string Name,

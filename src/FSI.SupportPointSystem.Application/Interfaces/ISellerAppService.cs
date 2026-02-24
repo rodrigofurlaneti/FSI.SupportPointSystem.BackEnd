@@ -1,5 +1,5 @@
-using FSI.SupportPoint.Application.Dtos.Seller.Request;
-using FSI.SupportPoint.Application.Dtos.Seller.Response;
+using FSI.SupportPointSystem.Application.Dtos.Seller.Request;
+using FSI.SupportPointSystem.Application.Dtos.Seller.Response;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;

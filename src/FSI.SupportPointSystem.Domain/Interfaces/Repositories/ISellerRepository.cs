@@ -13,5 +13,6 @@ namespace FSI.SupportPointSystem.Domain.Interfaces.Repositories
         Task<IEnumerable<Seller>> GetAllAsync();
         Task DeleteAsync(Guid id);
         Task<Seller?> GetByCpfAsync(string cpf);
+        Task<IEnumerable<Seller>> GetBySalesTeamIdAsync(Guid salesTeamId);
     }
 }

@@ -5,9 +5,9 @@ using FSI.SupportPointSystem.Domain.Entities;
 using FSI.SupportPointSystem.Domain.ValueObjects;
 using FSI.SupportPointSystem.Domain.Exceptions;
 using FluentValidation;
-using FSI.SupportPoint.Application.Dtos.Checkin.Request;
-using FSI.SupportPoint.Application.Dtos.Checkout.Request;
-using FSI.SupportPoint.Application.Dtos.Visit.Response;
+using FSI.SupportPointSystem.Application.Dtos.Checkin.Request;
+using FSI.SupportPointSystem.Application.Dtos.Checkout.Request;
+using FSI.SupportPointSystem.Application.Dtos.Visit.Response;
 
 namespace FSI.SupportPointSystem.Application.Services
 {

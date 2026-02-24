@@ -1,5 +1,5 @@
-using FSI.SupportPoint.Application.Dtos.Customer.Request;
-using FSI.SupportPoint.Application.Dtos.Customer.Response;
+using FSI.SupportPointSystem.Application.Dtos.Customer.Request;
+using FSI.SupportPointSystem.Application.Dtos.Customer.Response;
 
 namespace FSI.SupportPointSystem.Application.Interfaces
 {

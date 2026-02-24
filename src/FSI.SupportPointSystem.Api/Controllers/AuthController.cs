@@ -1,5 +1,5 @@
-using FSI.SupportPoint.Application.Dtos.Login.Request;
-using FSI.SupportPoint.Application.Interfaces;
+using FSI.SupportPointSystem.Application.Dtos.Login.Request;
+using FSI.SupportPointSystem.Application.Interfaces;
 using FSI.SupportPointSystem.Domain.Interfaces.Services;
 using FSI.SupportPointSystem.Infrastructure.Services;
 using Microsoft.AspNetCore.Mvc;

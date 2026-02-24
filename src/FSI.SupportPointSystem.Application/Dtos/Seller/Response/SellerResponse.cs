@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace FSI.SupportPoint.Application.Dtos.Seller.Response
+namespace FSI.SupportPointSystem.Application.Dtos.Seller.Response
 {
     public record SellerResponse(
         Guid Id,

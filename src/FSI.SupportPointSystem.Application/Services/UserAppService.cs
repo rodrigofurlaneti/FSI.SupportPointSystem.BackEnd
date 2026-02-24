@@ -1,4 +1,4 @@
-﻿using FSI.SupportPoint.Application.Interfaces;
+﻿using FSI.SupportPointSystem.Application.Interfaces;
 using FSI.SupportPointSystem.Application.Interfaces;
 using FSI.SupportPointSystem.Domain.Entities;
 using FSI.SupportPointSystem.Domain.Interfaces.Repositories;
