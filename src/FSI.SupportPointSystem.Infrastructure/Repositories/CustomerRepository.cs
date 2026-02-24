@@ -16,30 +16,23 @@ namespace FSI.SupportPointSystem.Infrastructure.Repositories
         private readonly DbConnectionFactory _dbConnectionFactory;
         public CustomerRepository(DbConnectionFactory dbConnectionFactory)
             => _dbConnectionFactory = dbConnectionFactory;
+
         public async Task UpsertAsync(Customer customer)
         {
             using var connection = _dbConnectionFactory.CreateConnection();
-            var parameters = new DynamicParameters();
-            parameters.Add("@Id", customer.Id, DbType.Guid);
-            parameters.Add("@CompanyName", customer.CompanyName, DbType.String);
-            parameters.Add("@Cnpj", customer.Cnpj.Value, DbType.String);
-            parameters.Add("@LatTarget", customer.LocationTarget.Latitude, DbType.Decimal);
-            parameters.Add("@LogTarget", customer.LocationTarget.Longitude, DbType.Decimal);
+            var parameters = CustomerMapper.ToParameters(customer);
             await connection.ExecuteAsync(
                 "SpUpsertCustomer",
                 parameters,
                 commandType: CommandType.StoredProcedure);
         }
+
         public async Task UpdateAsync(Customer customer)
         {
             using var connection = _dbConnectionFactory.CreateConnection();
-            var parameters = new DynamicParameters();
-            parameters.Add("@Id", customer.Id, DbType.Guid);
-            parameters.Add("@CompanyName", customer.CompanyName, DbType.String);
-            parameters.Add("@LatTarget", customer.LocationTarget.Latitude, DbType.Decimal);
-            parameters.Add("@LogTarget", customer.LocationTarget.Longitude, DbType.Decimal);
+            var parameters = CustomerMapper.ToParameters(customer);
             await connection.ExecuteAsync(
-                "SpUpdateCustomer",
+                "SpUpsertCustomer",
                 parameters,
                 commandType: CommandType.StoredProcedure);
         }
@@ -66,8 +59,9 @@ namespace FSI.SupportPointSystem.Infrastructure.Repositories
             var rows = await connection.QueryAsync<dynamic>(
                 "SpGetAllCustomers",
                 commandType: CommandType.StoredProcedure);
-            return rows.Select(row => (Customer)CustomerMapper.ToDomain(row))
+            return rows.Select(row => CustomerMapper.ToDomain(row))
                        .Where(c => c != null)
+                       .Cast<Customer>()
                        .ToList();
         }
         public async Task<Customer?> GetByCnpjAsync(string cnpj)
