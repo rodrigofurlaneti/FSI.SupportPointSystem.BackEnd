@@ -16,12 +16,17 @@ namespace FSI.SupportPointSystem.Infrastructure.Mappings
                 (Guid)row.CustomerId,
                 checkinLoc,
                 Convert.ToDouble(row.DistanceMeters), 
-                (DateTime)row.CheckinTimestamp
+                (DateTime)row.CheckinTimestamp,
+                (string)row.SummaryCheckOut
             );
             if (row.CheckoutTimestamp != null)
             {
                 var checkoutLoc = new Coordinates((decimal)row.CheckoutLatitude, (decimal)row.CheckoutLongitude);
-                visit.PerformCheckout(checkoutLoc, Convert.ToDouble(row.CheckoutDistanceMeters));
+                visit.PerformCheckout(
+                    checkoutLoc,
+                    Convert.ToDouble(row.CheckoutDistanceMeters),
+                    row.SummaryCheckOut?.ToString() ?? string.Empty 
+                );
             }
 
             return visit;

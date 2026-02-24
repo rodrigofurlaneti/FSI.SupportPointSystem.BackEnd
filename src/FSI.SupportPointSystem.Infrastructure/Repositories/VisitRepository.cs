@@ -52,6 +52,7 @@ namespace FSI.SupportPointSystem.Infrastructure.Repositories
             parameters.Add("@LatCaptured", visit.CheckoutLocation!.Latitude, DbType.Decimal);
             parameters.Add("@LogCaptured", visit.CheckoutLocation!.Longitude, DbType.Decimal);
             parameters.Add("@Distance", visit.CheckoutDistance, DbType.Double);
+            parameters.Add("@Summary", visit.SummaryCheckOut, DbType.String);
             await connection.ExecuteAsync(
                 "SpRecordCheckout",
                 parameters,

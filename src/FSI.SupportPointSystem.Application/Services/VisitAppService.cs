@@ -55,6 +55,7 @@ namespace FSI.SupportPointSystem.Application.Services
                 Timestamp = visit.CheckinTimestamp
             };
         }
+
         public async Task<VisitResponse> RegisterCheckoutAsync(CheckoutRequest request)
         {
             var validationResult = await _checkoutValidator.ValidateAsync(request);
@@ -66,7 +67,7 @@ namespace FSI.SupportPointSystem.Application.Services
                 ?? throw new DomainException("Dados do cliente da visita não encontrados.");
             var currentLoc = new Coordinates(request.Latitude, request.Longitude);
             double distance = _locationService.CalculateDistanceInMeters(currentLoc, customer.LocationTarget);
-            visit.PerformCheckout(currentLoc, distance);
+            visit.PerformCheckout(currentLoc, distance, request.SummaryCheckOut);
             await _visitRepository.SaveCheckoutAsync(visit);
             return new VisitResponse
             {
