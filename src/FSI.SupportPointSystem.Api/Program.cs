@@ -6,6 +6,15 @@ using System.Text;
 using OpenApiModels = global::Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("WebAppPolicy", policy =>
+    {
+        policy.AllowAnyOrigin()
+              .AllowAnyMethod()
+              .AllowAnyHeader();
+    });
+});
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure();
 var jwtSettings = builder.Configuration.GetSection("Jwt");
@@ -64,7 +73,9 @@ builder.Services.AddSwaggerGen(c =>
         }
     });
 });
+
 var app = builder.Build();
+app.UseCors("WebAppPolicy");
 app.UseSwagger();
 app.UseSwaggerUI(c =>
 {

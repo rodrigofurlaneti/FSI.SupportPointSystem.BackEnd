@@ -7,7 +7,7 @@ namespace FSI.SupportPointSystem.Api.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize(Roles = "ADMIN")]
+    [Authorize]
     public class SellerController : ControllerBase
     {
         private readonly ISellerAppService _sellerAppService;

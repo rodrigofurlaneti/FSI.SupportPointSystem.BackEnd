@@ -8,7 +8,7 @@ namespace FSI.SupportPointSystem.Api.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize(Roles = "ADMIN")] 
+    [Authorize] 
     public class SalesTeamController : ControllerBase
     {
         private readonly ISalesTeamAppService _salesTeamAppService;

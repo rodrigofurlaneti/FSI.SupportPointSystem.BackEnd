@@ -23,11 +23,18 @@ public class AuthController : ControllerBase
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
         var user = await _userAppService.GetByCpfAsync(request.Cpf);
-        var hashGerado = _authService.HashPassword(request.Password);//test
+        if (user == null)
+            return Unauthorized("CPF ou senha inválidos.");
         var auth = _authService.VerifyPassword(request.Password, user.PasswordHash);
-        if (user == null || !auth)
+        if (!auth)
             return Unauthorized("CPF ou senha inválidos.");
         var token = _authService.GenerateToken(user.Cpf, user.Role, user.Id);
-        return Ok(new { token });
+        return Ok(new
+        {
+            token,
+            sellerId = user.Seller?.Id, 
+            role = user.Role,
+            name = user.Name
+        });
     }
 }

@@ -1,6 +1,7 @@
 ﻿using Dapper;
 using FSI.SupportPointSystem.Domain.Entities;
 using FSI.SupportPointSystem.Domain.Interfaces.Repositories;
+using FSI.SupportPointSystem.Domain.ValueObjects;
 using FSI.SupportPointSystem.Infrastructure.Context;
 using System.Data;
 
@@ -18,10 +19,34 @@ namespace FSI.SupportPointSystem.Infrastructure.Repositories
         public async Task<User?> GetByCpfAsync(string cpf)
         {
             using var connection = _dbConnectionFactory.CreateConnection();
-            return await connection.QueryFirstOrDefaultAsync<User>(
+            var result = await connection.QueryAsync<dynamic>(
                 "SpGetUserByCpf",
                 new { Cpf = cpf },
                 commandType: CommandType.StoredProcedure
+            );
+            var row = result.FirstOrDefault();
+            if (row == null) return null;
+            Seller? seller = null;
+            if (row.SellerId != null)
+            {
+                var sellerCpf = new Cpf(row.Cpf);
+                seller = new Seller(
+                    (Guid)row.SellerId,
+                    (string)row.Name,
+                    sellerCpf,
+                    (string)(row.Email ?? string.Empty),
+                    (string)(row.Phone ?? string.Empty),
+                    (Guid?)row.SalesTeamId
+                );
+            }
+
+            return new User(
+                row.Id,
+                row.Cpf,
+                row.PasswordHash,
+                row.Role,
+                row.Name ?? string.Empty,
+                seller
             );
         }
 
