@@ -1,4 +1,4 @@
-using FSI.SupportPointSystem.Domain.Entities;
+﻿using FSI.SupportPointSystem.Domain.Entities;
 using FSI.SupportPointSystem.Domain.ValueObjects;
 using System;
 
@@ -9,23 +9,40 @@ namespace FSI.SupportPointSystem.Infrastructure.Mappings
         public static Visit ToDomain(dynamic row)
         {
             if (row == null) return null;
-            var checkinLoc = new Coordinates((decimal)row.LatitudeCaptured, (decimal)row.LongitudeCaptured);
-            var visit = new Visit(
-                (Guid)row.Id,
-                (Guid)row.SellerId,
-                (Guid)row.CustomerId,
-                checkinLoc,
-                Convert.ToDouble(row.DistanceMeters), 
-                (DateTime)row.CheckinTimestamp,
-                (string)row.SummaryCheckOut
+
+            // Ajuste 1: Conversão segura de decimais para Coordinates
+            var checkinLoc = new Coordinates(
+                Convert.ToDecimal(row.LatitudeCaptured),
+                Convert.ToDecimal(row.LongitudeCaptured)
             );
-            if (row.CheckoutTimestamp != null)
+
+            // Ajuste 2: Conversão de IDs (String do MySQL para Guid)
+            Guid visitId = row.Id is Guid guid ? guid : Guid.Parse(row.Id.ToString());
+            Guid sellerId = row.SellerId is Guid sGuid ? sGuid : Guid.Parse(row.SellerId.ToString());
+            Guid customerId = row.CustomerId is Guid cGuid ? cGuid : Guid.Parse(row.CustomerId.ToString());
+
+            var visit = new Visit(
+                visitId,
+                sellerId,
+                customerId,
+                checkinLoc,
+                Convert.ToDouble(row.DistanceMeters),
+                (DateTime)row.CheckinTimestamp,
+                row.SummaryCheckOut?.ToString()
+            );
+
+            // Ajuste 3: Verificação de nulidade compatível com MySQL (DBNull)
+            if (row.CheckoutTimestamp != null && row.CheckoutTimestamp != DBNull.Value)
             {
-                var checkoutLoc = new Coordinates((decimal)row.CheckoutLatitude, (decimal)row.CheckoutLongitude);
+                var checkoutLoc = new Coordinates(
+                    Convert.ToDecimal(row.CheckoutLatitude),
+                    Convert.ToDecimal(row.CheckoutLongitude)
+                );
+
                 visit.PerformCheckout(
                     checkoutLoc,
                     Convert.ToDouble(row.CheckoutDistanceMeters),
-                    row.SummaryCheckOut?.ToString() ?? string.Empty 
+                    row.SummaryCheckOut?.ToString() ?? string.Empty
                 );
             }
 

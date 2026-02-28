@@ -1,4 +1,4 @@
-using Dapper;
+﻿using Dapper;
 using FSI.SupportPointSystem.Domain.Entities;
 using FSI.SupportPointSystem.Domain.Interfaces.Repositories;
 using FSI.SupportPointSystem.Infrastructure.Context;
@@ -21,6 +21,9 @@ namespace FSI.SupportPointSystem.Infrastructure.Repositories
         {
             using var connection = _dbConnectionFactory.CreateConnection();
             var parameters = CustomerMapper.ToParameters(customer);
+
+            // As procedures no MySQL não requerem o prefixo @ na chamada do Dapper, 
+            // mas os nomes dentro do DynamicParameters devem bater com os da Procedure.
             await connection.ExecuteAsync(
                 "SpUpsertCustomer",
                 parameters,
@@ -29,48 +32,54 @@ namespace FSI.SupportPointSystem.Infrastructure.Repositories
 
         public async Task UpdateAsync(Customer customer)
         {
-            using var connection = _dbConnectionFactory.CreateConnection();
-            var parameters = CustomerMapper.ToParameters(customer);
-            await connection.ExecuteAsync(
-                "SpUpsertCustomer",
-                parameters,
-                commandType: CommandType.StoredProcedure);
+            // Reutiliza a lógica de Upsert conforme sua implementação original
+            await UpsertAsync(customer);
         }
+
         public async Task DeleteAsync(Guid id)
         {
             using var connection = _dbConnectionFactory.CreateConnection();
+            // Ajuste: O nome do parâmetro deve ser p_Id conforme definido na conversão SQL
             await connection.ExecuteAsync(
                 "SpDeleteCustomer",
-                new { Id = id },
+                new { p_Id = id.ToString() },
                 commandType: CommandType.StoredProcedure);
         }
+
         public async Task<Customer?> GetByIdAsync(Guid id)
         {
             using var connection = _dbConnectionFactory.CreateConnection();
+            // Ajuste: p_Id para consistência com o MySQL
             var row = await connection.QueryFirstOrDefaultAsync<dynamic>(
                 "SpGetCustomerById",
-                new { Id = id },
+                new { p_Id = id.ToString() },
                 commandType: CommandType.StoredProcedure);
+
             return row != null ? CustomerMapper.ToDomain(row) : null;
         }
+
         public async Task<IEnumerable<Customer>> GetAllAsync()
         {
             using var connection = _dbConnectionFactory.CreateConnection();
             var rows = await connection.QueryAsync<dynamic>(
                 "SpGetAllCustomers",
                 commandType: CommandType.StoredProcedure);
+
             return rows.Select(row => CustomerMapper.ToDomain(row))
                        .Where(c => c != null)
                        .Cast<Customer>()
                        .ToList();
         }
+
         public async Task<Customer?> GetByCnpjAsync(string cnpj)
         {
             using var connection = _dbConnectionFactory.CreateConnection();
+            // Ajuste: p_Cnpj para consistência
             var row = await connection.QueryFirstOrDefaultAsync<dynamic>(
                 "SpGetCustomerByCnpj",
-                new { Cnpj = cnpj },
+                new { p_Cnpj = cnpj },
                 commandType: CommandType.StoredProcedure);
+
             return row != null ? CustomerMapper.ToDomain(row) : null;
         }
     }

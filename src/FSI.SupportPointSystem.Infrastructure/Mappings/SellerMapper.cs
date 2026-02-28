@@ -11,8 +11,13 @@ namespace FSI.SupportPointSystem.Infrastructure.Mappings
         public static Seller ToDomain(dynamic row)
         {
             if (row == null) return null;
+
+            // Ajuste 1: Conversão de ID (String do MySQL para Guid do C#)
+            // Como no MySQL usamos CHAR(36), o Dapper retorna uma string.
+            Guid sellerId = row.Id is Guid guid ? guid : Guid.Parse(row.Id.ToString());
+
             return new Seller(
-                (Guid)row.Id,
+                sellerId,
                 (string)row.Name,
                 new Cpf((string)row.Cpf),
                 (string)row.Email,
@@ -23,16 +28,17 @@ namespace FSI.SupportPointSystem.Infrastructure.Mappings
         public static DynamicParameters ToParameters(Seller seller, string? passwordHash = null)
         {
             var parameters = new DynamicParameters();
+            parameters.Add("p_Id", seller.Id.ToString());
+            parameters.Add("p_Name", seller.Name);
+            parameters.Add("p_Cpf", seller.Cpf.Value);
+            parameters.Add("p_Email", seller.Email);
+            parameters.Add("p_Phone", seller.Phone);
 
-            parameters.Add("@Id", seller.Id, DbType.Guid);
-            parameters.Add("@Name", seller.Name, DbType.String);
-            parameters.Add("@Cpf", seller.Cpf.Value, DbType.String);
-            parameters.Add("@Email", seller.Email, DbType.String);
-            parameters.Add("@Phone", seller.Phone, DbType.String);
             if (!string.IsNullOrEmpty(passwordHash))
             {
-                parameters.Add("@PasswordHash", passwordHash, DbType.String);
+                parameters.Add("p_PasswordHash", passwordHash);
             }
+
             return parameters;
         }
     }

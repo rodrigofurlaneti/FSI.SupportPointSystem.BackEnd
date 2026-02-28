@@ -1,5 +1,5 @@
-using System.Data;
-using Microsoft.Data.SqlClient; 
+﻿using System.Data;
+using MySqlConnector; 
 using Microsoft.Extensions.Configuration;
 
 namespace FSI.SupportPointSystem.Infrastructure.Context
@@ -11,8 +11,9 @@ namespace FSI.SupportPointSystem.Infrastructure.Context
         public DbConnectionFactory(IConfiguration configuration)
         {
             _connectionString = configuration.GetConnectionString("DefaultConnection")
-                ?? throw new ArgumentNullException("ConnectionString 'DefaultConnection' n�o encontrada no appsettings.json.");
+                ?? throw new ArgumentNullException("ConnectionString não encontrada.");
         }
-        public IDbConnection CreateConnection() => new SqlConnection(_connectionString);
+
+        public IDbConnection CreateConnection() => new MySqlConnection(_connectionString);
     }
 }

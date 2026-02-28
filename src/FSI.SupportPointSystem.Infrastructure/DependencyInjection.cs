@@ -1,4 +1,4 @@
-using FSI.SupportPointSystem.Domain.Interfaces.Repositories;
+﻿using FSI.SupportPointSystem.Domain.Interfaces.Repositories;
 using FSI.SupportPointSystem.Domain.Interfaces.Services;
 using FSI.SupportPointSystem.Domain.Services;
 using FSI.SupportPointSystem.Infrastructure.Context;
@@ -13,7 +13,9 @@ namespace FSI.SupportPointSystem.Infrastructure
         public static IServiceCollection AddInfrastructure(this IServiceCollection services)
         {
             // Infra & Services
-            services.AddScoped<DbConnectionFactory>();
+            services.AddSingleton<DbConnectionFactory>();
+            services.AddScoped<IAuthService, AuthService>();
+            services.AddScoped<ILocationService, LocationService>();
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<ILocationService, LocationService>();
 
