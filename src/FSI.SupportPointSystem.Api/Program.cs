@@ -7,7 +7,7 @@ using OpenApiModels = global::Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Configuração de CORS para o projeto CheckVisit
+// 1. Configuração de CORS - Deve permitir as chamadas do Front-end
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("WebAppPolicy", policy =>
@@ -18,11 +18,11 @@ builder.Services.AddCors(options =>
     });
 });
 
-// Injeção de Dependência das Camadas
+// 2. Injeção de Dependência das Camadas (Application e Infrastructure/MySQL)
 builder.Services.AddApplication();
-builder.Services.AddInfrastructure(); // Aqui entra sua nova configuração MySQL
+builder.Services.AddInfrastructure();
 
-// Configuração JWT - Sincronizada com appsettings.json
+// 3. Configuração JWT
 var jwtSettings = builder.Configuration.GetSection("Jwt");
 var secretKey = jwtSettings.GetValue<string>("Secret")
     ?? throw new InvalidOperationException("JWT Secret is missing!");
@@ -38,19 +38,16 @@ builder.Services.AddAuthentication(x =>
 })
 .AddJwtBearer(x =>
 {
-    x.RequireHttpsMetadata = false; // Em produção AWS, mude para true se usar SSL no Load Balancer
+    x.RequireHttpsMetadata = false; // Mantido false para IP direto na AWS
     x.SaveToken = true;
     x.TokenValidationParameters = new TokenValidationParameters
     {
         ValidateIssuerSigningKey = true,
         IssuerSigningKey = new SymmetricSecurityKey(key),
-
-        // Ajuste: Validar conforme configurado no appsettings
         ValidateIssuer = !string.IsNullOrEmpty(issuer),
         ValidIssuer = issuer,
         ValidateAudience = !string.IsNullOrEmpty(audience),
         ValidAudience = audience,
-
         ValidateLifetime = true,
         ClockSkew = TimeSpan.Zero
     };
@@ -59,7 +56,7 @@ builder.Services.AddAuthentication(x =>
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 
-// Configuração do Swagger para Suporte a Bearer Token
+// 4. Configuração do Swagger
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiModels.OpenApiInfo
@@ -95,18 +92,23 @@ builder.Services.AddSwaggerGen(c =>
 });
 
 var app = builder.Build();
-// Middleware Pipeline
+
+// --- Middleware Pipeline (A ORDEM IMPORTA) ---
+
+// O CORS DEVE vir antes de Authentication e Authorization
 app.UseCors("WebAppPolicy");
 
-// Swagger sempre ativo para facilitar seus testes no ambiente de desenvolvimento/nuvem
+// Swagger configurado como página inicial (RoutePrefix vazio)
 app.UseSwagger();
 app.UseSwaggerUI(c =>
 {
     c.SwaggerEndpoint("/swagger/v1/swagger.json", "FSI SupportPoint V1");
-    c.RoutePrefix = string.Empty; // Define o Swagger como página inicial da API
+    c.RoutePrefix = string.Empty;
 });
 
-app.UseHttpsRedirection();
+// Comentado para evitar erros de certificado no acesso via IP direto
+// app.UseHttpsRedirection();
+
 app.UseAuthentication();
 app.UseAuthorization();
 
