@@ -95,7 +95,6 @@ builder.Services.AddSwaggerGen(c =>
 });
 
 var app = builder.Build();
-
 // Middleware Pipeline
 app.UseCors("WebAppPolicy");
 
