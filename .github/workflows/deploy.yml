@@ -10,19 +10,12 @@ jobs:
     
     steps:
       - name: Checkout do código
-        uses: actions/checkout@v4
-
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: '8.0.x'
-
-      - name: Publicar Aplicação
-        run: dotnet publish -c Release -o ./publish
+        uses: actions/checkout@v4 # Baixa o código do repositório
 
       - name: Build da Imagem Docker
         run: |
-          # Build da imagem. O ponto (.) indica o contexto atual
+          # O Docker fará o Restore e o Publish internamente, 
+          # evitando erros de permissão no SDK do .NET da EC2
           docker build -t checkvisit-api .
 
       - name: Rodar Container
@@ -30,13 +23,13 @@ jobs:
           # Injeção segura da string de conexão do RDS
           DB_CONN: ${{ secrets.DB_CONNECTION_STRING }}
         run: |
-          # 1. Limpeza: remove containers e imagens antigas para não encher o disco da EC2
+          # 1. Limpeza de containers antigos
           docker stop checkvisit-container || true
           docker rm checkvisit-container || true
-          docker image prune -f # Remove imagens "orphan" (sem tag)
+          docker image prune -f 
           
-          # 2. Execução: mapeia a porta 80 da EC2 para a 8080 do Container
-          # Usamos aspas duplas na variável de ambiente para evitar quebras de caracteres
+          # 2. Execução: Repare que o nome da variável de ambiente no .NET 
+          # deve seguir o padrão de duplo underline para o Docker
           docker run -d \
             --name checkvisit-container \
             --restart always \
