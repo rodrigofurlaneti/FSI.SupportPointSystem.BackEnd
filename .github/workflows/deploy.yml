@@ -5,7 +5,7 @@ on:
     branches: [ main ]
 
 jobs:
-  # JOB 1: AWS (Linux / Bash) - Já funcional
+  # JOB 1: AWS (Linux) - Ajustado para rodar atrás do Nginx
   deploy-aws:
     name: Deploy to AWS EC2
     runs-on: self-hosted
@@ -19,7 +19,8 @@ jobs:
           docker build -t checkvisit-api .
           docker stop checkvisit-container || true
           docker rm checkvisit-container || true
-          docker run -d --name checkvisit-container --restart always -p 80:8080 -e ConnectionStrings__DefaultConnection="$DB_CONN" checkvisit-api
+          # Mudamos de 80:8080 para 5000:8080 para não conflitar com o Nginx
+          docker run -d --name checkvisit-container --restart always -p 5000:8080 -e ConnectionStrings__DefaultConnection="$DB_CONN" checkvisit-api
 
   # JOB 2: AZURE (Windows / PowerShell)
   deploy-azure:
@@ -34,17 +35,15 @@ jobs:
           DB_CONN: ${{ secrets.DB_CONNECTION_STRING }}
         shell: powershell
         run: |
-          # 1. Build da Imagem
           docker build -t checkvisit-api .
           
-          # 2. Limpeza do container anterior
           $container = docker ps -a -q -f "name=checkvisit-container-azure"
           if ($container) { 
               docker stop checkvisit-container-azure
               docker rm checkvisit-container-azure 
           }
           
-          # 3. Execução com Injeção do Certificado SSL
+          # Na Azure, como você não usa Nginx, pode manter o mapeamento direto
           docker run -d `
             --name checkvisit-container-azure `
             --restart always `
