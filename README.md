@@ -1,45 +1,54 @@
-﻿# 📍 Support Point API
+# 📍 Support Point API
 
 ### **Sistema de Ponto de Apoio e Check-in Geolocalizado**
 
-Este projeto é uma API robusta desenvolvida em **.NET 8.0** focada no rastreio e validação de visitas de vendedores externos. A solução utiliza geolocalização para garantir que o vendedor esteja em um raio de 100 metros do cliente para realizar check-in e check-out.
+Este projeto é uma solução robusta focada no rastreio e validação de visitas de vendedores externos. A aplicação utiliza geolocalização para garantir que o vendedor esteja em um raio de 100 metros do cliente para realizar check-in e check-out.
 
 ---
 
 ## 🏗️ Arquitetura e Tecnologias
 
-O projeto segue os princípios de **Domain-Driven Design (DDD)** e **Clean Architecture**:
+O projeto segue os princípios de **Domain-Driven Design (DDD)** e **Clean Architecture**, operando em um modelo **Multi-Cloud Ativo-Ativo/Failover**:
 
-* **Core:** .NET 8.0 (C#)
-* **Banco de Dados:** PostgreSQL / SQL Server (Padrão `SupportPointDB`)
+* **Runtime:** .NET 8.0 (C#)
+* **Frontend:** React / Angular (Hospedado em ambas as nuvens)
+* **Multi-Cloud Hosting:** * **Azure:** App Services & Static Web Apps
+    * **AWS:** Elastic Beanstalk / ECS & S3 CloudFront
+* **Database (Single Source of Truth):** Amazon RDS (MySQL / SQL Server) na AWS
 * **Persistência:** Dapper (Execução de Stored Procedures)
 * **Testes:** xUnit & Moq (Foco em TDD)
-* **Especificação:** Gherkin / BDD
+
+---
+
+## 🌐 Estratégia Multi-Cloud (Distributed Hosting)
+
+Diferente de arquiteturas convencionais, este projeto distribui suas camadas de front-end e API em dois provedores globais, mantendo a persistência centralizada:
+
+1.  **Redundância de Aplicação (Azure & AWS):** A API e o Front-end estão implantados simultaneamente no **Azure App Service** e no **AWS Elastic Beanstalk**. Isso permite que, em caso de instabilidade em uma das regiões ou provedores, o serviço permaneça disponível.
+2.  **Banco de Dados Centralizado (AWS RDS):** Para evitar inconsistência de dados (split-brain), o banco de dados reside exclusivamente no **Amazon RDS**. Ambas as instâncias da API (Azure e AWS) conectam-se a este endpoint central.
+3.  **Tráfego e DNS:** O roteamento é gerenciado para direcionar o tráfego de forma inteligente entre as duas nuvens, garantindo baixa latência para o usuário final.
+
+
 
 ---
 
 ## 📄 Especificação de Negócio (BDD)
 
-As regras de negócio foram definidas utilizando a linguagem **Gherkin**. O arquivo de especificação completo encontra-se em `/docs/features/ponto_apoio.feature`.
+As regras de negócio foram definidas utilizando a linguagem **Gherkin**. O arquivo completo está em `/docs/features/ponto_apoio.feature`.
 
-### **Principais Regras:**
-
-* **Margem de Erro:** O sistema aceita uma tolerância de até **100 metros** de distância do ponto oficial do cliente.
-* **Estado da Visita:** Um vendedor não pode iniciar um novo check-in sem ter finalizado (check-out) o anterior.
-* **Segurança:** Autenticação via **CPF** com perfis de `ADMIN` (gestão) e `SELLER` (operação).
+* **Tolerância de Localização:** Raio de **100 metros** do ponto oficial do cliente.
+* **Fluxo de Visita:** Check-out obrigatório antes de um novo Check-in.
+* **Segurança:** Autenticação via **CPF** com perfis `ADMIN` e `SELLER`.
 
 ---
 
-## 🗄️ Estrutura do Banco de Dados
+## 🗄️ Estrutura de Dados (AWS RDS)
 
-O sistema utiliza o banco de dados `SupportPointDB`. A lógica de persistência é centralizada em **Stored Procedures** para garantir integridade e performance.
+A lógica de persistência é centralizada em **Stored Procedures** para garantir que, independentemente de qual cloud a requisição venha (Azure ou AWS), a performance e a integridade sejam idênticas.
 
-### **Principais Tabelas:**
-
-* **Users:** Credenciais e Roles (ADMIN/SELLER).
-* **Sellers:** Dados dos representantes comerciais.
-* **Customers:** Cadastro de clientes com `LatitudeTarget` e `LongitudeTarget`.
-* **Checkins:** Registro de visitas, distâncias capturadas, timestamps e duração.
+### **Procedures Principais:**
+* `SpRecordCheckin`: Valida geolocalização e inicia visita.
+* `SpRecordCheckout`: Finaliza visita e calcula métricas.
 
 ---
 
@@ -47,31 +56,32 @@ O sistema utiliza o banco de dados `SupportPointDB`. A lógica de persistência 
 
 ### **1. Requisitos**
 * SDK .NET 8.0
-* Instância de banco de dados compatível (PostgreSQL/SQL Server)
-* IDE (VS Code ou Visual Studio 2022)
+* Instância ativa no **Amazon RDS**
+* Configuração de permissões de rede (Security Groups)
 
-### **2. Configuração do Banco**
-Execute os scripts contidos em `/database/init.sql` para criar as tabelas e as seguintes procedures:
-* `SpCreateSeller`
-* `SpUpsertCustomer`
-* `SpRecordCheckin`
-* `SpRecordCheckout`
+### **2. Configuração de Redes Multi-Cloud**
+Para que a API no Azure acesse o RDS na AWS:
+1.  Obtenha os **Outbound IP Addresses** do seu App Service no Azure.
+2.  Adicione estes IPs nas **Inbound Rules** do Security Group do seu RDS na AWS (Porta 5432/1433).
 
-### **3. Rodando a API**
-```bash
-# Restaurar dependências
-dotnet restore
-
-# Executar o projeto
-dotnet run --project SupportPoint.Api
-
-# 📂 Estrutura de Pastas (DDD)
-
+### **3. Variáveis de Ambiente**
+```json
+{
+  "ConnectionStrings": {
+    "SupportPointDB": "Endpoint-RDS-AWS;Database=SupportPointDB;User=xxx;Password=xxx;"
+  }
+}
+```
+## 📂 Estrutura de Pastas (DDD)
 /src
-├── SupportPoint.Domain         # Entidades, Value Objects e Interfaces
-├── SupportPoint.Application    # Use Cases (Commands) e DTOs
-├── SupportPoint.Infrastructure # Implementação de Repositórios (Dapper)
-└── SupportPoint.Api            # Controllers e Injeção de Dependência
+├── SupportPoint.Domain         # Regras de Negócio e Entidades
+├── SupportPoint.Application    # Casos de Uso e DTOs
+├── SupportPoint.Infrastructure # Repositórios Dapper (Acesso ao RDS)
+├── SupportPoint.Api            # API .NET 8.0 (Azure/AWS)
+└── SupportPoint.Web            # Front-end (Azure/AWS)
 /tests
-└── SupportPoint.Tests          # Testes de Unidade e Integração (TDD)
+└── SupportPoint.Tests          # TDD com xUnit
+
+---
+
 
