@@ -29,7 +29,8 @@ builder.Services.AddCors(options =>
         policy.WithOrigins(
             "https://proud-island-0aa82ae0f.6.azurestaticapps.net",
             "http://44.195.62.176:3000",
-            "http://localhost:3000"
+            "http://localhost:3000",
+            "https://checkvisit-api.duckdns.org" // <-- ADICIONE ESTA LINHA AQUI
         )
         .AllowAnyMethod()
         .AllowAnyHeader();
