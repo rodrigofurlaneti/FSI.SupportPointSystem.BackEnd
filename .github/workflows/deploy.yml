@@ -5,45 +5,62 @@ on:
     branches: [ main ]
 
 jobs:
-  # Job AWS - Já está verde e funcional
+  # ==========================================
+  # JOB 1: AWS (Linux / Bash)
+  # ==========================================
   deploy-aws:
     name: Deploy to AWS EC2
-    runs-on: self-hosted
+    runs-on: self-hosted # Seu Runner Linux na AWS
     steps:
       - name: Checkout do código
         uses: actions/checkout@v4
+
       - name: Build and Run on AWS
         env:
           DB_CONN: ${{ secrets.DB_CONNECTION_STRING }}
         run: |
+          # Sintaxe nativa Bash (Linux) - NÃO mude os nomes dos containers aqui
           docker build -t checkvisit-api .
           docker stop checkvisit-container || true
           docker rm checkvisit-container || true
-          docker run -d --name checkvisit-container --restart always -p 80:8080 -e ConnectionStrings__DefaultConnection="$DB_CONN" checkvisit-api
+          docker image prune -f
+          
+          docker run -d \
+            --name checkvisit-container \
+            --restart always \
+            -p 80:8080 \
+            -e ConnectionStrings__DefaultConnection="$DB_CONN" \
+            checkvisit-api
 
-  # Job Azure - Ajustado para PowerShell nativo
+  # ==========================================
+  # JOB 2: AZURE (Windows / PowerShell)
+  # ==========================================
   deploy-azure:
     name: Deploy to Azure VM
-    runs-on: azure-vm
+    runs-on: azure-vm # Seu Runner Windows na Azure
     steps:
       - name: Checkout do código
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
       - name: Build and Run on Azure
         env:
           DB_CONN: ${{ secrets.DB_CONNECTION_STRING }}
-        shell: powershell
+        shell: powershell # Força o uso do PowerShell nativo do Windows Server
         run: |
-          # 1. Build
+          # 1. Build da Imagem
           docker build -t checkvisit-api .
           
-          # 2. Limpeza segura (Sintaxe PowerShell)
+          # 2. Limpeza (Sintaxe PowerShell segura)
           $container = docker ps -a -q -f "name=checkvisit-container-azure"
           if ($container) { 
               docker stop checkvisit-container-azure
               docker rm checkvisit-container-azure 
           }
+          docker image prune -f
           
-          # 3. Execução no Azure
+          # 3. Execução na Azure (Sintaxe com crase ` )
           docker run -d `
             --name checkvisit-container-azure `
             --restart always `
