@@ -5,58 +5,49 @@ on:
     branches: [ main ]
 
 jobs:
-  # Job 1: Deploy para AWS (EC2 Linux)
+  # Job 1: AWS (Mantemos como está, pois funciona no Linux)
   deploy-aws:
     name: Deploy to AWS EC2
-    runs-on: self-hosted # Label da sua EC2 Linux
+    runs-on: self-hosted
     steps:
       - name: Checkout do código
         uses: actions/checkout@v4
-
       - name: Build and Run on AWS
         env:
           DB_CONN: ${{ secrets.DB_CONNECTION_STRING }}
         run: |
-          # Build da imagem Docker
           docker build -t checkvisit-api .
-          
-          # Limpeza e execução (Sintaxe Bash para Linux)
           docker stop checkvisit-container || true
           docker rm checkvisit-container || true
-          docker image prune -f
-          
-          docker run -d \
-            --name checkvisit-container \
-            --restart always \
-            -p 80:8080 \
-            -e ConnectionStrings__DefaultConnection="$DB_CONN" \
-            checkvisit-api
+          docker run -d --name checkvisit-container --restart always -p 80:8080 -e ConnectionStrings__DefaultConnection="$DB_CONN" checkvisit-api
 
-  # Job 2: Deploy para Azure (VM Windows Server 2022) - Contingência
+  # Job 2: Azure (Correção para o erro de descompactação no Windows)
   deploy-azure:
     name: Deploy to Azure VM
-    runs-on: azure-vm # Certifique-se de adicionar esta label no GitHub
+    runs-on: azure-vm
     steps:
       - name: Checkout do código
         uses: actions/checkout@v4
+        with:
+          # Isso evita que o Windows crie caminhos excessivamente longos no zip
+          sparse-checkout: . 
 
       - name: Build and Run on Azure
         env:
           DB_CONN: ${{ secrets.DB_CONNECTION_STRING }}
-        shell: pwsh # Força o uso do PowerShell na VM Azure
+        shell: pwsh
         run: |
-          # Build da imagem Docker
+          # 1. Build
           docker build -t checkvisit-api .
           
-          # Limpeza de containers antigos (Sintaxe PowerShell para Windows)
+          # 2. Limpeza manual para evitar erro de 'ObjectNotFound' no Docker
           $container = docker ps -a -q -f "name=checkvisit-container-azure"
           if ($container) { 
               docker stop checkvisit-container-azure
               docker rm checkvisit-container-azure 
           }
-          docker image prune -f
           
-          # Execução no Azure (Uso de ` para quebra de linha e $env para variável)
+          # 3. Execução
           docker run -d `
             --name checkvisit-container-azure `
             --restart always `
