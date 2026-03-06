@@ -5,10 +5,10 @@ on:
     branches: [ main ]
 
 jobs:
-  # Job 1: Deploy para AWS (Sua estrutura estável atual)
+  # Job 1: Deploy para AWS (EC2 Linux) - Seu ambiente principal
   deploy-aws:
     name: Deploy to AWS EC2
-    runs-on: self-hosted # Runner da EC2 (Linux)
+    runs-on: self-hosted 
     steps:
       - name: Checkout do código
         uses: actions/checkout@v4
@@ -17,13 +17,15 @@ jobs:
         env:
           DB_CONN: ${{ secrets.DB_CONNECTION_STRING }}
         run: |
+          # Build da imagem
           docker build -t checkvisit-api .
           
-          # Sintaxe Bash para Linux
+          # Limpeza (Sintaxe Bash/Linux)
           docker stop checkvisit-container || true
           docker rm checkvisit-container || true
           docker image prune -f
           
+          # Execução - No Linux usamos $DB_CONN diretamente
           docker run -d \
             --name checkvisit-container \
             --restart always \
@@ -31,10 +33,10 @@ jobs:
             -e ConnectionStrings__DefaultConnection="$DB_CONN" \
             checkvisit-api
 
-  # Job 2: Deploy para Azure (Contingência na VMWindows)
+  # Job 2: Deploy para Azure (VM Windows) - Sua contingência em West US 2
   deploy-azure:
     name: Deploy to Azure VM
-    runs-on: azure-vm # Certifique-se de adicionar esta label no GitHub
+    runs-on: azure-vm
     steps:
       - name: Checkout do código
         uses: actions/checkout@v4
@@ -42,11 +44,12 @@ jobs:
       - name: Build and Run on Azure
         env:
           DB_CONN: ${{ secrets.DB_CONNECTION_STRING }}
-        shell: pwsh # Força o uso do PowerShell Core na VM Azure
+        shell: pwsh
         run: |
+          # Build da imagem
           docker build -t checkvisit-api .
           
-          # Sintaxe PowerShell para Windows (Mais robusta)
+          # Limpeza (Sintaxe PowerShell segura para Windows)
           $container = docker ps -a -q -f "name=checkvisit-container-azure"
           if ($container) { 
               docker stop checkvisit-container-azure
@@ -54,10 +57,10 @@ jobs:
           }
           docker image prune -f
           
-          # Execução no Azure (Note o uso do crase ` para quebra de linha)
+          # Execução - No Windows usamos $env:DB_CONN
           docker run -d `
             --name checkvisit-container-azure `
             --restart always `
             -p 80:8080 `
-            -e ConnectionStrings__DefaultConnection="$env:DB_CONN" `
+            -e ConnectionStrings__DefaultConnection="$($env:DB_CONN)" `
             checkvisit-api
