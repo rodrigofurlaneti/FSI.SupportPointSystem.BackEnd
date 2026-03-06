@@ -5,14 +5,13 @@ on:
     branches: [ main ]
 
 jobs:
-  # JOB 1: AWS (EC2 Linux - Bash)
+  # Job AWS - Continua funcionando normalmente
   deploy-aws:
     name: Deploy to AWS EC2
     runs-on: self-hosted
     steps:
       - name: Checkout do código
         uses: actions/checkout@v4
-
       - name: Build and Run on AWS
         env:
           DB_CONN: ${{ secrets.DB_CONNECTION_STRING }}
@@ -22,7 +21,7 @@ jobs:
           docker rm checkvisit-container || true
           docker run -d --name checkvisit-container --restart always -p 80:8080 -e ConnectionStrings__DefaultConnection="$DB_CONN" checkvisit-api
 
-  # JOB 2: AZURE (VM Windows - PowerShell)
+  # Job Azure - Ajustado para API 1.44
   deploy-azure:
     name: Deploy to Azure VM
     runs-on: azure-vm
@@ -37,20 +36,21 @@ jobs:
           DB_CONN: ${{ secrets.DB_CONNECTION_STRING }}
         shell: powershell
         run: |
-          # Define a versão da API para evitar erros de compatibilidade
-          $env:DOCKER_API_VERSION = "1.41"
+          # 1. Ajuste de compatibilidade para a versão mínima exigida pelo seu Docker (1.44)
+          $env:DOCKER_API_VERSION = "1.44"
           
-          # 1. Build
+          # 2. Build da Imagem
           docker build -t checkvisit-api .
           
-          # 2. Limpeza (Sintaxe PowerShell)
+          # 3. Limpeza de containers antigos
           $container = docker ps -a -q -f "name=checkvisit-container-azure"
           if ($container) { 
               docker stop checkvisit-container-azure
               docker rm checkvisit-container-azure 
           }
+          docker image prune -f
           
-          # 3. Execução (Crase ` para quebra de linha no Windows)
+          # 4. Execução na Azure
           docker run -d `
             --name checkvisit-container-azure `
             --restart always `
