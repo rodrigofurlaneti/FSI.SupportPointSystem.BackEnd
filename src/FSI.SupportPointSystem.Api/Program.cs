@@ -1,4 +1,4 @@
-﻿using FSI.SupportPointSystem.Application;
+using FSI.SupportPointSystem.Application;
 using FSI.SupportPointSystem.Infrastructure;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
@@ -7,13 +7,27 @@ using OpenApiModels = global::Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// 1. Configuração de CORS - Deve permitir as chamadas do Front-end
+// --- NOVO: Configuração do Kestrel para HTTPS ---
+builder.WebHost.ConfigureKestrel(options =>
+{
+    // Mantém a porta 8080 para compatibilidade se necessário
+    options.ListenAnyIP(8080); 
+
+    // Ativa a porta 443 com o certificado exportado
+    options.ListenAnyIP(443, listenOptions =>
+    {
+        // Certifique-se de que o arquivo foi exportado para este caminho com a senha definida
+        listenOptions.UseHttps(@"C:\certs\api.pfx", "CheckVisit2026!");
+    });
+});
+
+// 1. Configuração de CORS
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("WebAppPolicy", policy =>
     {
         policy.WithOrigins(
-            "https://proud-island-0aa82ae0f.6.azurestaticapps.net", // Azure
+            "https://proud-island-0aa82ae0f.6.azurestaticapps.net", // Azure Front
             "http://44.195.62.176:3000",                            // AWS EC2
             "http://localhost:3000"                                 // Local Dev
         )
@@ -22,7 +36,7 @@ builder.Services.AddCors(options =>
     });
 });
 
-// 2. Injeção de Dependência das Camadas (Application e Infrastructure/MySQL)
+// 2. Injeção de Dependência
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure();
 
@@ -42,7 +56,8 @@ builder.Services.AddAuthentication(x =>
 })
 .AddJwtBearer(x =>
 {
-    x.RequireHttpsMetadata = false; // Mantido false para IP direto na AWS
+    // Agora que temos SSL, você pode mudar para 'true' em produção se desejar
+    x.RequireHttpsMetadata = false; 
     x.SaveToken = true;
     x.TokenValidationParameters = new TokenValidationParameters
     {
@@ -67,7 +82,7 @@ builder.Services.AddSwaggerGen(c =>
     {
         Title = "FSI Support Point System API",
         Version = "v1",
-        Description = "API do projeto CheckVisit integrada ao AWS RDS MySQL"
+        Description = "API do projeto CheckVisit integrada ao Azure SSL"
     });
 
     c.AddSecurityDefinition("Bearer", new OpenApiModels.OpenApiSecurityScheme
@@ -97,12 +112,10 @@ builder.Services.AddSwaggerGen(c =>
 
 var app = builder.Build();
 
-// --- Middleware Pipeline (A ORDEM IMPORTA) ---
+// --- Middleware Pipeline ---
 
-// O CORS DEVE vir antes de Authentication e Authorization
 app.UseCors("WebAppPolicy");
 
-// Swagger configurado como página inicial (RoutePrefix vazio)
 app.UseSwagger();
 app.UseSwaggerUI(c =>
 {
@@ -110,8 +123,8 @@ app.UseSwaggerUI(c =>
     c.RoutePrefix = string.Empty;
 });
 
-// Comentado para evitar erros de certificado no acesso via IP direto
-// app.UseHttpsRedirection();
+// Reativar agora que o certificado está configurado
+app.UseHttpsRedirection();
 
 app.UseAuthentication();
 app.UseAuthorization();
