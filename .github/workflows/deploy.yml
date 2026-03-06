@@ -5,35 +5,23 @@ on:
     branches: [ main ]
 
 jobs:
-  # Job 1: Deploy para AWS (EC2 Linux - Runner: self-hosted)
+  # Job AWS - Já está funcional
   deploy-aws:
     name: Deploy to AWS EC2
     runs-on: self-hosted
     steps:
       - name: Checkout do código
         uses: actions/checkout@v4
-
       - name: Build and Run on AWS
         env:
           DB_CONN: ${{ secrets.DB_CONNECTION_STRING }}
         run: |
-          # Build da imagem Docker
           docker build -t checkvisit-api .
-          
-          # Limpeza (Sintaxe Bash para Linux)
           docker stop checkvisit-container || true
           docker rm checkvisit-container || true
-          docker image prune -f
-          
-          # Execução na AWS
-          docker run -d \
-            --name checkvisit-container \
-            --restart always \
-            -p 80:8080 \
-            -e ConnectionStrings__DefaultConnection="$DB_CONN" \
-            checkvisit-api
+          docker run -d --name checkvisit-container --restart always -p 80:8080 -e ConnectionStrings__DefaultConnection="$DB_CONN" checkvisit-api
 
-  # Job 2: Deploy para Azure (VM Windows - Runner: azure-vm)
+  # Job Azure - Ajustado para o Windows PowerShell
   deploy-azure:
     name: Deploy to Azure VM
     runs-on: azure-vm
@@ -41,19 +29,17 @@ jobs:
       - name: Checkout do código
         uses: actions/checkout@v4
         with:
-          # Ajuda a evitar erros de caminhos longos no Windows
           persist-credentials: false
 
       - name: Build and Run on Azure
         env:
           DB_CONN: ${{ secrets.DB_CONNECTION_STRING }}
-        # Alterado para 'powershell' para usar o Windows PowerShell nativo da VM
         shell: powershell
         run: |
           # 1. Build da Imagem
           docker build -t checkvisit-api .
           
-          # 2. Limpeza de containers antigos (Sintaxe PowerShell segura)
+          # 2. Limpeza (Sintaxe segura para evitar erros se o container não existir)
           $container = docker ps -a -q -f "name=checkvisit-container-azure"
           if ($container) { 
               docker stop checkvisit-container-azure
@@ -61,7 +47,7 @@ jobs:
           }
           docker image prune -f
           
-          # 3. Execução no Azure (Injeção de variável $env:DB_CONN)
+          # 3. Execução
           docker run -d `
             --name checkvisit-container-azure `
             --restart always `
