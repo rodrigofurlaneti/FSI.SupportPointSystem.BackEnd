@@ -20,5 +20,6 @@ RUN dotnet publish "FSI.SupportPointSystem.Api.csproj" -c Release -o /app/publis
 FROM mcr.microsoft.com/dotnet/aspnet:8.0
 WORKDIR /app
 EXPOSE 8080
+EXPOSE 443
 COPY --from=build /app/publish .
 ENTRYPOINT ["dotnet", "FSI.SupportPointSystem.Api.dll"]
