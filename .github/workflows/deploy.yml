@@ -28,25 +28,22 @@ jobs:
     steps:
       - name: Checkout do código
         uses: actions/checkout@v4
-        with:
-          persist-credentials: false
-
       - name: Build and Run on Azure
         env:
           DB_CONN: ${{ secrets.DB_CONNECTION_STRING }}
         shell: powershell
         run: |
-          # 1. Build da Imagem
+          # 1. Build
           docker build -t checkvisit-api .
           
-          # 2. Limpeza segura
+          # 2. Limpeza segura (Sintaxe PowerShell)
           $container = docker ps -a -q -f "name=checkvisit-container-azure"
           if ($container) { 
               docker stop checkvisit-container-azure
               docker rm checkvisit-container-azure 
           }
           
-          # 3. Execução (Uso de ` para quebra de linha no Windows)
+          # 3. Execução no Azure
           docker run -d `
             --name checkvisit-container-azure `
             --restart always `
