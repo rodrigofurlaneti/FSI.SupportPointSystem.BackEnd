@@ -5,7 +5,7 @@ on:
     branches: [ main ]
 
 jobs:
-  # Job 1: AWS (Mantemos como está, pois funciona no Linux)
+  # Job AWS - Continua funcionando normalmente
   deploy-aws:
     name: Deploy to AWS EC2
     runs-on: self-hosted
@@ -21,7 +21,7 @@ jobs:
           docker rm checkvisit-container || true
           docker run -d --name checkvisit-container --restart always -p 80:8080 -e ConnectionStrings__DefaultConnection="$DB_CONN" checkvisit-api
 
-  # Job 2: Azure (Correção para o erro de descompactação no Windows)
+  # Job Azure - Ajustado para o seu Runner VMWin2022
   deploy-azure:
     name: Deploy to Azure VM
     runs-on: azure-vm
@@ -29,8 +29,8 @@ jobs:
       - name: Checkout do código
         uses: actions/checkout@v4
         with:
-          # Isso evita que o Windows crie caminhos excessivamente longos no zip
-          sparse-checkout: . 
+          # Isso ajuda a evitar erros de descompactação no Windows
+          persist-credentials: false
 
       - name: Build and Run on Azure
         env:
@@ -40,7 +40,7 @@ jobs:
           # 1. Build
           docker build -t checkvisit-api .
           
-          # 2. Limpeza manual para evitar erro de 'ObjectNotFound' no Docker
+          # 2. Limpeza (Sintaxe PowerShell)
           $container = docker ps -a -q -f "name=checkvisit-container-azure"
           if ($container) { 
               docker stop checkvisit-container-azure
