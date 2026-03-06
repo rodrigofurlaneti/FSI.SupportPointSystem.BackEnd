@@ -50,6 +50,6 @@ jobs:
           docker run -d `
             --name checkvisit-container-azure `
             --restart always `
-            -p 80:8080 `
+            -p 8080:8080 `
             -e ConnectionStrings__DefaultConnection="$($env:DB_CONN)" `
             checkvisit-api
