@@ -74,12 +74,19 @@ Para que a API no Azure acesse o RDS na AWS:
 ```
 ## 📂 Estrutura de Pastas (DDD)
 /src
+
 ├── SupportPoint.Domain         # Regras de Negócio e Entidades
+
 ├── SupportPoint.Application    # Casos de Uso e DTOs
+
 ├── SupportPoint.Infrastructure # Repositórios Dapper (Acesso ao RDS)
+
 ├── SupportPoint.Api            # API .NET 8.0 (Azure/AWS)
+
 └── SupportPoint.Web            # Front-end (Azure/AWS)
+
 /tests
+
 └── SupportPoint.Tests          # TDD com xUnit
 
 ---
