@@ -5,7 +5,7 @@ on:
     branches: [ main ]
 
 jobs:
-  # JOB 1: AWS (Linux / Bash)
+  # Job AWS - Continua funcionando normalmente
   deploy-aws:
     name: Deploy to AWS EC2
     runs-on: self-hosted
@@ -21,7 +21,7 @@ jobs:
           docker rm checkvisit-container || true
           docker run -d --name checkvisit-container --restart always -p 80:8080 -e ConnectionStrings__DefaultConnection="$DB_CONN" checkvisit-api
 
-  # JOB 2: AZURE (Windows / PowerShell)
+  # Job Azure - Isolado para PowerShell
   deploy-azure:
     name: Deploy to Azure VM
     runs-on: azure-vm
@@ -36,7 +36,7 @@ jobs:
           DB_CONN: ${{ secrets.DB_CONNECTION_STRING }}
         shell: powershell
         run: |
-          # 1. Build (Agora funcionará com Docker em modo Linux na VM)
+          # 1. Build (O erro 'unable to start' é resolvido na VM Azure, não aqui)
           docker build -t checkvisit-api .
           
           # 2. Limpeza segura
@@ -46,7 +46,7 @@ jobs:
               docker rm checkvisit-container-azure 
           }
           
-          # 3. Execução
+          # 3. Execução na Azure
           docker run -d `
             --name checkvisit-container-azure `
             --restart always `
