@@ -5,7 +5,7 @@ on:
     branches: [ main ]
 
 jobs:
-  # Job AWS - Continua funcionando normalmente
+  # Job para AWS (Seu ambiente atual que já está OK)
   deploy-aws:
     name: Deploy to AWS EC2
     runs-on: self-hosted
@@ -21,7 +21,7 @@ jobs:
           docker rm checkvisit-container || true
           docker run -d --name checkvisit-container --restart always -p 80:8080 -e ConnectionStrings__DefaultConnection="$DB_CONN" checkvisit-api
 
-  # Job Azure - Ajustado para o seu Runner VMWin2022
+  # Job para Azure (Ajustado para evitar erros de diretório no Windows)
   deploy-azure:
     name: Deploy to Azure VM
     runs-on: azure-vm
@@ -29,25 +29,24 @@ jobs:
       - name: Checkout do código
         uses: actions/checkout@v4
         with:
-          # Isso ajuda a evitar erros de descompactação no Windows
-          persist-credentials: false
+          clean: false # Evita que o PowerShell tente deletar pastas protegidas
 
       - name: Build and Run on Azure
         env:
           DB_CONN: ${{ secrets.DB_CONNECTION_STRING }}
         shell: pwsh
         run: |
-          # 1. Build
+          # 1. Build da Imagem
           docker build -t checkvisit-api .
           
-          # 2. Limpeza (Sintaxe PowerShell)
+          # 2. Limpeza de containers antigos (Sintaxe PowerShell segura)
           $container = docker ps -a -q -f "name=checkvisit-container-azure"
           if ($container) { 
               docker stop checkvisit-container-azure
               docker rm checkvisit-container-azure 
           }
           
-          # 3. Execução
+          # 3. Execução (Uso de ` para quebra de linha no Windows)
           docker run -d `
             --name checkvisit-container-azure `
             --restart always `
