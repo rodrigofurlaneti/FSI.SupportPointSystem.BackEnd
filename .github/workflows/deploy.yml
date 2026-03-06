@@ -1,38 +1,64 @@
-﻿name: Deploy CheckVisit API
+name: Deploy Multi-Cloud API (AWS & Azure)
 
 on:
   push:
     branches: [ main ]
 
 jobs:
-  build-and-deploy:
-    runs-on: self-hosted # Sua EC2 como Runner
-    
+  # Job 1: Deploy para AWS (EC2 como Runner)
+  deploy-aws:
+    name: Deploy to AWS EC2
+    runs-on: self-hosted # Label da sua instância EC2 na AWS
     steps:
       - name: Checkout do código
-        uses: actions/checkout@v4 # Baixa o código do repositório
+        uses: actions/checkout@v4
 
-      - name: Build da Imagem Docker
-        run: |
-          # O Docker fará o Restore e o Publish internamente, 
-          # evitando erros de permissão no SDK do .NET da EC2
-          docker build -t checkvisit-api .
-
-      - name: Rodar Container
+      - name: Build and Run on AWS
         env:
-          # Injeção segura da string de conexão do RDS
           DB_CONN: ${{ secrets.DB_CONNECTION_STRING }}
         run: |
-          # 1. Limpeza de containers antigos
+          # Build da imagem Docker
+          docker build -t checkvisit-api .
+          
+          # Limpeza e execução (Sintaxe Bash/Linux)
           docker stop checkvisit-container || true
           docker rm checkvisit-container || true
-          docker image prune -f 
+          docker image prune -f
           
-          # 2. Execução: Repare que o nome da variável de ambiente no .NET 
-          # deve seguir o padrão de duplo underline para o Docker
           docker run -d \
             --name checkvisit-container \
             --restart always \
             -p 80:8080 \
             -e ConnectionStrings__DefaultConnection="$DB_CONN" \
+            checkvisit-api
+
+  # Job 2: Deploy para Azure (VM como Runner) - Contingência
+  deploy-azure:
+    name: Deploy to Azure VM
+    runs-on: azure-vm # Label que você configurou no config.cmd na VM Azure
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@v4
+
+      - name: Build and Run on Azure
+        env:
+          DB_CONN: ${{ secrets.DB_CONNECTION_STRING }}
+        shell: pwsh # Garante o uso do PowerShell Core/Windows PowerShell
+        run: |
+          # Build da imagem Docker
+          docker build -t checkvisit-api .
+          
+          # Limpeza de containers antigos (Sintaxe PowerShell para Windows)
+          if (docker ps -a -q -f name=checkvisit-container-azure) { 
+              docker stop checkvisit-container-azure
+              docker rm checkvisit-container-azure 
+          }
+          docker image prune -f
+          
+          # Execução no Azure
+          docker run -d `
+            --name checkvisit-container-azure `
+            --restart always `
+            -p 80:8080 `
+            -e ConnectionStrings__DefaultConnection="$env:DB_CONN" `
             checkvisit-api
