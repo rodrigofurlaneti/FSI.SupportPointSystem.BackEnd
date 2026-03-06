@@ -12,9 +12,13 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("WebAppPolicy", policy =>
     {
-        policy.AllowAnyOrigin()
-              .AllowAnyMethod()
-              .AllowAnyHeader();
+        policy.WithOrigins(
+            "https://proud-island-0aa82ae0f.6.azurestaticapps.net", // Azure
+            "http://44.195.62.176:3000",                            // AWS EC2
+            "http://localhost:3000"                                 // Local Dev
+        )
+        .AllowAnyMethod()
+        .AllowAnyHeader();
     });
 });
 
