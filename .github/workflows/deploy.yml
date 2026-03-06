@@ -21,35 +21,35 @@ jobs:
           docker rm checkvisit-container || true
           docker run -d --name checkvisit-container --restart always -p 80:8080 -e ConnectionStrings__DefaultConnection="$DB_CONN" checkvisit-api
 
-  # JOB 2: AZURE (Windows / PowerShell) - Agora vai funcionar!
+  # JOB 2: AZURE (Windows / PowerShell)
   deploy-azure:
     name: Deploy to Azure VM
     runs-on: azure-vm
     steps:
       - name: Checkout do código
         uses: actions/checkout@v4
-        with:
-          persist-credentials: false
 
       - name: Build and Run on Azure
         env:
           DB_CONN: ${{ secrets.DB_CONNECTION_STRING }}
         shell: powershell
         run: |
-          # 1. Build da Imagem (Agora com suporte a Linux Containers via WSL2)
+          # 1. Build da Imagem
           docker build -t checkvisit-api .
           
-          # 2. Limpeza segura PowerShell
+          # 2. Limpeza do container anterior
           $container = docker ps -a -q -f "name=checkvisit-container-azure"
           if ($container) { 
               docker stop checkvisit-container-azure
               docker rm checkvisit-container-azure 
           }
           
-          # 3. Execução na Azure (Crase ` para quebra de linha)
+          # 3. Execução com Injeção do Certificado SSL
           docker run -d `
             --name checkvisit-container-azure `
             --restart always `
             -p 8080:8080 `
+            -p 443:443 `
+            -v C:\certs:/app/certs `
             -e ConnectionStrings__DefaultConnection="$($env:DB_CONN)" `
             checkvisit-api
