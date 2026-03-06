@@ -8,16 +8,16 @@ using OpenApiModels = global::Microsoft.OpenApi.Models;
 var builder = WebApplication.CreateBuilder(args);
 
 // --- NOVO: Configuração do Kestrel para HTTPS ---
+// --- CONFIGURAÇÃO CORRETA PARA DOCKER NO AZURE ---
 builder.WebHost.ConfigureKestrel(options =>
 {
-    // Mantém a porta 8080 para compatibilidade se necessário
     options.ListenAnyIP(8080); 
 
-    // Ativa a porta 443 com o certificado exportado
     options.ListenAnyIP(443, listenOptions =>
     {
-        // Certifique-se de que o arquivo foi exportado para este caminho com a senha definida
-        listenOptions.UseHttps(@"C:\certs\api.pfx", "CheckVisit2026!");
+        var certPath = "/app/certs/fsi-checkvisit-api.westus2.cloudapp.azure.com.pfx";
+        var certPassword = "CheckVisit2026!";
+        listenOptions.UseHttps(certPath, certPassword);
     });
 });
 
