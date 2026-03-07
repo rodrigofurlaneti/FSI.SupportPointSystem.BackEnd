@@ -2,6 +2,7 @@
 using FSI.SupportPointSystem.Domain.Interfaces.Services;
 using FSI.SupportPointSystem.Domain.Services;
 using FSI.SupportPointSystem.Infrastructure.Context;
+using FSI.SupportPointSystem.Infrastructure.ExternalServices; // Adicione o namespace onde está o OpenCnpjService
 using FSI.SupportPointSystem.Infrastructure.Repositories;
 using FSI.SupportPointSystem.Infrastructure.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -16,8 +17,13 @@ namespace FSI.SupportPointSystem.Infrastructure
             services.AddSingleton<DbConnectionFactory>();
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<ILocationService, LocationService>();
-            services.AddScoped<IAuthService, AuthService>();
-            services.AddScoped<ILocationService, LocationService>();
+
+            // --- Novo Registro para consulta de CNPJ ---
+            services.AddHttpClient<IEnterpriseExternalService, OpenCnpjService>(client =>
+            {
+                client.BaseAddress = new Uri("https://api.opencnpj.org/");
+                client.DefaultRequestHeaders.Add("Accept", "application/json");
+            });
 
             // Repositories
             services.AddScoped<ISellerRepository, SellerRepository>();
@@ -25,6 +31,7 @@ namespace FSI.SupportPointSystem.Infrastructure
             services.AddScoped<IVisitRepository, VisitRepository>();
             services.AddScoped<IUserRepository, UserRepository>();
             services.AddScoped<ISalesTeamRepository, SalesTeamRepository>();
+
             return services;
         }
     }

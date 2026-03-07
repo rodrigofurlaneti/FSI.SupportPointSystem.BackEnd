@@ -1,4 +1,5 @@
 using FluentValidation;
+using FSI.SupportPoint.Application.Services; // Certifique-se que este namespace está correto
 using FSI.SupportPointSystem.Application.Interfaces;
 using FSI.SupportPointSystem.Application.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -11,14 +12,12 @@ namespace FSI.SupportPointSystem.Application
         public static IServiceCollection AddApplication(this IServiceCollection services)
         {
             services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
-
-            // App Services Existentes
             services.AddScoped<ISellerAppService, SellerAppService>();
             services.AddScoped<ICustomerAppService, CustomerAppService>();
             services.AddScoped<IVisitAppService, VisitAppService>();
             services.AddScoped<IUserAppService, UserAppService>();
             services.AddScoped<ISalesTeamAppService, SalesTeamAppService>();
-
+            services.AddScoped<IEnterpriseAppService, EnterpriseAppService>();
             return services;
         }
     }

@@ -9,14 +9,24 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.WebHost.ConfigureKestrel(options =>
 {
-    options.ListenAnyIP(8080); 
+    // Mantém a porta 8080 para HTTP
+    options.ListenAnyIP(8080);
+
+    // Tenta configurar a 443 para HTTPS
     options.ListenAnyIP(443, listenOptions =>
     {
         var certPath = builder.Configuration["Kestrel:Certificates:Default:Path"];
         var certPassword = builder.Configuration["Kestrel:Certificates:Default:Password"];
+
+        // SÓ tenta usar o certificado se o arquivo REALMENTE existir no disco
         if (!string.IsNullOrEmpty(certPath) && System.IO.File.Exists(certPath))
         {
             listenOptions.UseHttps(certPath, certPassword);
+        }
+        else
+        {
+            // Caso contrário (Localhost), usa o certificado de dev padrão do Windows
+            listenOptions.UseHttps();
         }
     });
 });
