@@ -77,5 +77,13 @@ namespace FSI.SupportPointSystem.Application.Services
                 Timestamp = visit.CheckoutTimestamp!.Value
             };
         }
+        public async Task<bool> HasPendingCheckinAsync(string sellerId)
+        {
+            if (!Guid.TryParse(sellerId, out Guid sellerGuid))
+            {
+                throw new BusinessRuleException("O ID do vendedor fornecido é inválido.");
+            }
+            return await _visitRepository.HasPendingCheckinAsync(sellerGuid);
+        }
     }
 }

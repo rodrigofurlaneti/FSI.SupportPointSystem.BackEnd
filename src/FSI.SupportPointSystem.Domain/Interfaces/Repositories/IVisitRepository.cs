@@ -8,5 +8,6 @@ namespace FSI.SupportPointSystem.Domain.Interfaces.Repositories
         Task<Visit?> GetActiveVisitBySellerIdAsync(Guid sellerId);
         Task SaveCheckinAsync(Visit visit); 
         Task SaveCheckoutAsync(Visit visit);
+        Task<bool> HasPendingCheckinAsync(Guid sellerId);
     }
 }

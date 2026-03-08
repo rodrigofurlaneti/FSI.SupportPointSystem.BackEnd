@@ -1,97 +1,71 @@
 using FSI.SupportPointSystem.Application;
 using FSI.SupportPointSystem.Infrastructure;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
+using FSI.SupportPointSystem.Infrastructure.Configuration; 
 using System.Text;
-using OpenApiModels = global::Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// --- 1. Configuração do Servidor (Kestrel) ---
 builder.WebHost.ConfigureKestrel(options =>
 {
-    // Mantém a porta 8080 para HTTP
-    options.ListenAnyIP(8080);
-
-    // Tenta configurar a 443 para HTTPS
+    options.ListenAnyIP(8080); // Mantém a porta 8080 para HTTP
     options.ListenAnyIP(443, listenOptions =>
     {
         var certPath = builder.Configuration["Kestrel:Certificates:Default:Path"];
         var certPassword = builder.Configuration["Kestrel:Certificates:Default:Password"];
 
-        // SÓ tenta usar o certificado se o arquivo REALMENTE existir no disco
         if (!string.IsNullOrEmpty(certPath) && System.IO.File.Exists(certPath))
         {
-            listenOptions.UseHttps(certPath, certPassword);
+            listenOptions.UseHttps(certPath, certPassword); // Usa certificado configurado
         }
         else
         {
-            // Caso contrário (Localhost), usa o certificado de dev padrão do Windows
-            listenOptions.UseHttps();
+            listenOptions.UseHttps(); // Certificado padrão de dev
         }
     });
 });
 
-// 1. Configuração de CORS lendo do appsettings.json
-var allowedOrigins = builder.Configuration.GetSection("AllowedOrigins").Get<string[]>();
+// --- 2. Injeção de Dependências (Serviços) ---
 
+// Configuração de CORS com a sua política WebAppPolicy
+var allowedOrigins = builder.Configuration.GetSection("AllowedOrigins").Get<string[]>();
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("WebAppPolicy", policy =>
     {
-        policy.WithOrigins(allowedOrigins) 
+        policy.WithOrigins(allowedOrigins)
               .AllowAnyMethod()
               .AllowAnyHeader();
     });
 });
 
-// 2. Injeção de Dependência
+// Camadas da Arquitetura
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure();
 
-// 3. Configuração JWT (Lendo do JSON)
-var jwtSettings = builder.Configuration.GetSection("Jwt");
-var secretKey = jwtSettings["Secret"] ?? throw new InvalidOperationException("JWT Secret is missing!");
-var key = Encoding.ASCII.GetBytes(secretKey);
-
-builder.Services.AddAuthentication(x =>
-{
-    x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-    x.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-})
-.AddJwtBearer(x =>
-{
-    x.RequireHttpsMetadata = true; // Agora temos SSL ativo
-    x.SaveToken = true;
-    x.TokenValidationParameters = new TokenValidationParameters
-    {
-        ValidateIssuerSigningKey = true,
-        IssuerSigningKey = new SymmetricSecurityKey(key),
-        ValidateIssuer = true,
-        ValidIssuer = jwtSettings["Issuer"],
-        ValidateAudience = true,
-        ValidAudience = jwtSettings["Audience"],
-        ValidateLifetime = true,
-        ClockSkew = TimeSpan.Zero
-    };
-});
+// Extensões de Configuração (Swagger e Segurança JWT)
+builder.Services.AddSwaggerConfig(); // Sua nova classe SwaggerConfiguration
+builder.Services.AddSecurity(builder.Configuration); // Sua nova classe SecurityConfiguration
 
 builder.Services.AddControllers();
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
-// --- Middleware Pipeline ---
+// --- 3. Middleware Pipeline (Ordem de Execução) ---
+
+// Ativa o CORS antes de qualquer outro middleware de rota
 app.UseCors("WebAppPolicy");
+
+// Configuração visual do Swagger
 app.UseSwagger();
-app.UseSwaggerUI(c => {
+app.UseSwaggerUI(c =>
+{
     c.SwaggerEndpoint("/swagger/v1/swagger.json", "FSI SupportPoint V1");
-    c.RoutePrefix = string.Empty;
+    c.RoutePrefix = string.Empty; // Define o Swagger como página inicial
 });
 
 app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
-
 app.Run();

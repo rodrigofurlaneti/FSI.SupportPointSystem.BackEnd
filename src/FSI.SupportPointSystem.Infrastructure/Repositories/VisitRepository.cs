@@ -10,15 +10,32 @@ namespace FSI.SupportPointSystem.Infrastructure.Repositories
     public class VisitRepository : IVisitRepository
     {
         private readonly DbConnectionFactory _dbConnectionFactory;
+
         public VisitRepository(DbConnectionFactory dbConnectionFactory)
         {
             _dbConnectionFactory = dbConnectionFactory;
         }
 
+        public async Task<bool> HasPendingCheckinAsync(Guid sellerId)
+        {
+            using var connection = _dbConnectionFactory.CreateConnection();
+            var parameters = new DynamicParameters();
+
+            parameters.Add("p_SellerId", sellerId.ToString());
+            parameters.Add("p_HasPending", dbType: DbType.Boolean, direction: ParameterDirection.Output);
+
+            await connection.ExecuteAsync(
+                "sp_CheckPendingCheckout",
+                parameters,
+                commandType: CommandType.StoredProcedure
+            );
+
+            return parameters.Get<bool>("p_HasPending");
+        }
+
         public async Task<Visit?> GetActiveVisitBySellerIdAsync(Guid sellerId)
         {
             using var connection = _dbConnectionFactory.CreateConnection();
-            // Ajuste: p_SellerId e .ToString() para compatibilidade com CHAR(36)
             var row = await connection.QueryFirstOrDefaultAsync<dynamic>(
                 "SpGetActiveVisitBySellerId",
                 new { p_SellerId = sellerId.ToString() },
@@ -31,7 +48,6 @@ namespace FSI.SupportPointSystem.Infrastructure.Repositories
         public async Task SaveCheckinAsync(Visit visit)
         {
             using var connection = _dbConnectionFactory.CreateConnection();
-            // Ajuste: Nomes dos parâmetros p_ e IDs convertidos para String
             await connection.ExecuteAsync(
                 "SpRecordCheckin",
                 new
@@ -52,7 +68,6 @@ namespace FSI.SupportPointSystem.Infrastructure.Repositories
             using var connection = _dbConnectionFactory.CreateConnection();
             var parameters = new DynamicParameters();
 
-            // Ajuste: Prefixo p_ e remoção de DbType explícito (o driver infere melhor)
             parameters.Add("p_SellerId", visit.SellerId.ToString());
             parameters.Add("p_CustomerId", visit.CustomerId.ToString());
             parameters.Add("p_LatCaptured", visit.CheckoutLocation!.Latitude);

@@ -8,5 +8,6 @@ namespace FSI.SupportPointSystem.Application.Interfaces
     {
         Task<VisitResponse> RegisterCheckinAsync(CheckinRequest request);
         Task<VisitResponse> RegisterCheckoutAsync(CheckoutRequest request);
+        Task<bool> HasPendingCheckinAsync(string sellerId);
     }
 }
