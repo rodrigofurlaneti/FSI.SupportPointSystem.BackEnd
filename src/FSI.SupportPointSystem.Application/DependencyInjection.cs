@@ -18,6 +18,7 @@ namespace FSI.SupportPointSystem.Application
             services.AddScoped<IUserAppService, UserAppService>();
             services.AddScoped<ISalesTeamAppService, SalesTeamAppService>();
             services.AddScoped<IEnterpriseAppService, EnterpriseAppService>();
+            services.AddScoped<ILeadAppService, LeadAppService>();
             return services;
         }
     }

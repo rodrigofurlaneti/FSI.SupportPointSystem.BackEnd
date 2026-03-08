@@ -31,6 +31,7 @@ namespace FSI.SupportPointSystem.Infrastructure
             services.AddScoped<IVisitRepository, VisitRepository>();
             services.AddScoped<IUserRepository, UserRepository>();
             services.AddScoped<ISalesTeamRepository, SalesTeamRepository>();
+            services.AddScoped<ILeadRepository, LeadRepository>();
 
             return services;
         }
